@@ -134,8 +134,6 @@
 	{
 		std::vector<fw_String> data;
 	};
-
-	using TMemo = std::vector<std::string>;
 		
 	using fw_Form		= Undefined;
 	using fw_Groupbox	= Undefined;
@@ -149,7 +147,7 @@
 	using fw_Statusbar	= Undefined;
 
 #else
-static_assert( false, " "Ein Framework muss gewählt sein, um diese Bibliothek zu nutzen"
+static_assert( false, "Ein Framework muss gewählt sein, um diese Bibliothek zu nutzen"
 #endif
 
 #endif
