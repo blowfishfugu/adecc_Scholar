@@ -1,7 +1,9 @@
-﻿#ifndef MyStreamH
+﻿#pragma once
+#ifndef MyStreamH
 #define MyStreamH
 
 #include "MyStdTypes.h"
+#include "MyFramework_Selection.h"
 
 #if defined BUILD_WITH_VCL
 	#include <Vcl.Forms.hpp>
@@ -27,10 +29,9 @@
 	#include <QHeaderView>
 
 #elif defined BUILD_WITH_NUKLEAR
-	#include <nuklear.h>
-
+	
 #else
-  #error Für diese Bibliothek muss ein Framework definiert sein.
+  static_assert( false, " Für diese Bibliothek muss ein Framework definiert sein.
 #endif
 
 #include <iostream>
@@ -233,7 +234,7 @@ public:
 	}
 };
 #else
-#error "unbekanntes Framework"
+static_assert( false, " "unbekanntes Framework"
 #endif
 
 #if defined BUILD_WITH_VCL || defined BUILD_WITH_FMX
@@ -286,7 +287,7 @@ class LabelStreamBuf : public StreamBufBase<ty> {
          }
     };
 #else
-#error "unbekanntes Framework"
+static_assert(false, "unbekanntes Framework");
 #endif
 
 #if defined BUILD_WITH_VCL
@@ -359,7 +360,7 @@ public:
    }
 };
 #else
-#error "unbekanntes Framework"
+static_assert(false, "unbekanntes Framework");
 #endif
 
 #if defined BUILD_WITH_VCL || defined BUILD_WITH_FMX
@@ -670,6 +671,11 @@ class TStreamWrapper {
         Reset();
         old = str.rdbuf(new MemoStreamBuf<ty_base>(elem));
         }
+	#elif defined BUILD_WITH_NUKLEAR
+	 void Activate(TMemo* elem) {
+		 Reset();
+		 old = str.rdbuf(new MemoStreamBuf<ty_base>(elem));
+	 }
      #endif
 
      #if defined BUILD_WITH_VCL || defined BUILD_WITH_FMX

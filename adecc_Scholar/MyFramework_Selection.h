@@ -1,4 +1,6 @@
 ﻿#pragma once
+#ifndef MYFRAMEWORK_SELECTION_H
+#define MYFRAMEWORK_SELECTION_H
 
 #if defined BUILD_WITH_VCL
    #include <System.Classes.hpp>
@@ -112,8 +114,33 @@
    using fw_Statusbar = QStatusBar;
 
 #elif defined BUILD_WITH_NUKLEAR
-	using fw_String = std::string;
-	using TMemo = std::vector<fw_String>;
+#include <vector>
+#include <string>
+#include <nuklear.h>
+
+	struct is_delpi_compatible : std::false_type {};
+	struct is_vcl_compile : std::false_type {};
+	struct is_fmx_compile : std::false_type {};
+	struct is_qt_compile : std::false_type {};
+	struct is_nuk_compile : std::true_type {};
+
+
+	using TMemo = std::vector<std::string>;
+		
+	using fw_String		= std::string;
+	using fw_Form		= std::nullopt_t;
+	using fw_Groupbox	= std::nullopt_t;
+	using fw_Edit		= std::nullopt_t;
+	using fw_Label		= std::nullopt_t;
+	using fw_Combobox	= std::nullopt_t;
+	using fw_Listbox	= std::nullopt_t;
+	using fw_Checkbox	= std::nullopt_t;
+	using fw_Button		= std::nullopt_t;
+	using fw_Table		= std::nullopt_t;
+	using fw_Statusbar	= std::nullopt_t;
+
 #else
-#error "Ein Framework muss gewählt sein, um diese Bibliothek zu nutzen"
+static_assert( false, " "Ein Framework muss gewählt sein, um diese Bibliothek zu nutzen"
+#endif
+
 #endif

@@ -1,4 +1,6 @@
 #pragma once
+#ifndef MYTUPLE_UTILS_H
+#define MYTUPLE_UTILS_H
 
 #include <iostream>
 #include <string>
@@ -45,3 +47,5 @@ inline auto Call(tty& time, fty function, Args... args) {
    time = std::chrono::duration_cast<tty>(func_ende - func_start);
    return ret;
    }
+
+#endif

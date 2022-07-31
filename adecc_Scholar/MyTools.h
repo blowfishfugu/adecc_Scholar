@@ -14,6 +14,7 @@ $HeadURL: $
 \since   Version 1.0
 \copyright Copyright ©2022 adecc Systemhaus GmbH, Siehe Lizenzbedingungen.
 */
+#pragma once
 #ifndef MyToolsH
 #define MyToolsH
 
@@ -23,7 +24,11 @@ $HeadURL: $
 #include <sstream>
 #include <algorithm>
 #include <regex>
+
+#ifdef _HAS_COMPLETE_CHARCONV
+#undef _HAS_COMPLETE_CHARCONV
 #define _HAS_COMPLETE_CHARCONV 1
+#endif
 #include <charconv>
 
 /** \class

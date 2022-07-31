@@ -1,4 +1,6 @@
 #pragma once
+#ifndef MYTYPE_TRAITS_H
+#define MYTYPE_TRAITS_H
 
 #if defined BUILD_WITH_VCL || BUILD_WITH_FMX
 #include <System.Classes.hpp>
@@ -187,3 +189,4 @@ struct is_set<ty, typename std::enable_if<std::is_same<ty,std::set<typename ty::
 };
 
 
+#endif

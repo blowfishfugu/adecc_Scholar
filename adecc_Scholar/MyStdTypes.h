@@ -1,4 +1,5 @@
-﻿#ifndef MyStdTypesH
+﻿#pragma once
+#ifndef MyStdTypesH
 #define MyStdTypesH
 
 #include <iostream>
@@ -7,6 +8,8 @@
 #include <map>
 #include <vector>
 #include <tuple>
+
+using namespace std::string_literals;
 
 
 struct Narrow {
