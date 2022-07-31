@@ -12,6 +12,7 @@
    struct is_vcl_compile : std::true_type {};
    struct is_fmx_compile : std::false_type {};
    struct is_qt_compile : std::false_type {};
+   struct is_nuk_compile : std::false_type {};
 
    using TForm        = Vcl::Forms::TForm;
    using TGroupBox    = Vcl::Stdctrls::TGroupBox;
@@ -53,6 +54,7 @@
    struct is_vcl_compile : std::false_type {};
    struct is_fmx_compile : std::true_type {};
    struct is_qt_compile : std::false_type {};
+   struct is_nuk_compile : std::false_type {};
 
    using TForm       = Fmx::Forms::TForm;
    using TGroupBox   = Fmx::Stdctrls::TGroupBox;
@@ -99,6 +101,7 @@
    struct is_vcl_compile : std::false_type {};
    struct is_fmx_compile : std::false_type {};
    struct is_qt_compile : std::true_type {};
+   struct is_nuk_compile : std::false_type {};
 
    using fw_String    = QString;
    using fw_Form      = QWidget;
@@ -124,20 +127,26 @@
 	struct is_qt_compile : std::false_type {};
 	struct is_nuk_compile : std::true_type {};
 
+	using fw_String		= std::string;
+	struct Undefined{};
+
+	struct TMemo
+	{
+		std::vector<fw_String> data;
+	};
 
 	using TMemo = std::vector<std::string>;
 		
-	using fw_String		= std::string;
-	using fw_Form		= std::nullopt_t;
-	using fw_Groupbox	= std::nullopt_t;
-	using fw_Edit		= std::nullopt_t;
-	using fw_Label		= std::nullopt_t;
-	using fw_Combobox	= std::nullopt_t;
-	using fw_Listbox	= std::nullopt_t;
-	using fw_Checkbox	= std::nullopt_t;
-	using fw_Button		= std::nullopt_t;
-	using fw_Table		= std::nullopt_t;
-	using fw_Statusbar	= std::nullopt_t;
+	using fw_Form		= Undefined;
+	using fw_Groupbox	= Undefined;
+	using fw_Edit		= Undefined;
+	using fw_Label		= Undefined;
+	using fw_Combobox	= Undefined;
+	using fw_Listbox	= Undefined;
+	using fw_Checkbox	= Undefined;
+	using fw_Button		= Undefined;
+	using fw_Table		= Undefined;
+	using fw_Statusbar	= Undefined;
 
 #else
 static_assert( false, " "Ein Framework muss gewählt sein, um diese Bibliothek zu nutzen"

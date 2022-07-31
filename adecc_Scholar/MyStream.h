@@ -219,17 +219,17 @@ public:
 		value = para;
 
 		if (boClean)
-			value->clear();
+			value->data.clear();
 	}
 
 	virtual ~MemoStreamBuf(void) { value = nullptr; }
 
 	virtual void Write(void) {
 		if (StreamBufBase<ty>::os.str().length() > 0) {
-			value->emplace_back(StreamBufBase<ty>::os.str().c_str());
+			value->data.emplace_back(StreamBufBase<ty>::os.str().c_str());
 		}
 		else {
-			value->emplace_back(L"");
+			value->data.emplace_back(L"");
 		}
 	}
 };
