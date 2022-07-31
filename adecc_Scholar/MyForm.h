@@ -72,7 +72,7 @@ class TMyWait {
    };
 
 #else
-  #error Fehlende Klasse TMyWait in diesem Framework
+#error "Fehlende Klasse TMyWait in diesem Framework")
 #endif
 
 
@@ -109,7 +109,7 @@ class TMyForm {
                                { EMyAlignmentType::unknown, Qt::AlignVCenter | Qt::AlignLeft }
                                };
       #else
-         #error fehlende definition von align_type_conv in diesem Framework
+		#error "fehlende definition von align_type_conv in diesem Framework"
       #endif
 
    public:

@@ -23,6 +23,7 @@ $HeadURL: $
 #include <sstream>
 #include <algorithm>
 #include <regex>
+#define _HAS_COMPLETE_CHARCONV 1
 #include <charconv>
 
 /** \class

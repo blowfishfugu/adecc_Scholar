@@ -111,6 +111,9 @@
    using fw_Table     = QTableWidget;
    using fw_Statusbar = QStatusBar;
 
+#elif defined BUILD_WITH_NUKLEAR
+	using fw_String = std::string;
+	using TMemo = std::vector<fw_String>;
 #else
-  #error Ein Framework muss gewählt sein, um diese Bibliothek zu nutzen
+#error "Ein Framework muss gewählt sein, um diese Bibliothek zu nutzen"
 #endif

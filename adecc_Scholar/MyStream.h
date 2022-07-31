@@ -4,26 +4,31 @@
 #include "MyStdTypes.h"
 
 #if defined BUILD_WITH_VCL
-  #include <Vcl.Forms.hpp>
-  #include <Vcl.StdCtrls.hpp>
-  #include <Vcl.ComCtrls.hpp>
+	#include <Vcl.Forms.hpp>
+	#include <Vcl.StdCtrls.hpp>
+	#include <Vcl.ComCtrls.hpp>
 
 #elif defined BUILD_WITH_FMX
-  #include <FMX.Controls.hpp>
-  #include <FMX.Forms.hpp>
-  #include <FMX.Memo.hpp>
-  #include <FMX.StdCtrls.hpp>
-  #include <FMX.Grid.hpp>
-  #include <FMX.ListBox.hpp>
-  #include <FMX.Types.hpp>
+	#include <FMX.Controls.hpp>
+	#include <FMX.Forms.hpp>
+	#include <FMX.Memo.hpp>
+	#include <FMX.StdCtrls.hpp>
+	#include <FMX.Grid.hpp>
+	#include <FMX.ListBox.hpp>
+	#include <FMX.Types.hpp>
+
 #elif defined BUILD_WITH_QT
-#include <QWidget>
-#include <QTextEdit>
-#include <QLabel>
-#include <QComboBox>
-#include <QListWidget>
-#include <QTableWidget>
-#include <QHeaderView>
+	#include <QWidget>
+	#include <QTextEdit>
+	#include <QLabel>
+	#include <QComboBox>
+	#include <QListWidget>
+	#include <QTableWidget>
+	#include <QHeaderView>
+
+#elif defined BUILD_WITH_NUKLEAR
+	#include <nuklear.h>
+
 #else
   #error Für diese Bibliothek muss ein Framework definiert sein.
 #endif
@@ -202,8 +207,33 @@ public:
          }
       }
     };
+
+#elif defined BUILD_WITH_NUKLEAR
+template <typename ty>
+class MemoStreamBuf : public StreamBufBase<ty> {
+private:
+	TMemo* value;
+public:
+	MemoStreamBuf(TMemo* para, bool boClean = true) : StreamBufBase<ty>() {
+		value = para;
+
+		if (boClean)
+			value->clear();
+	}
+
+	virtual ~MemoStreamBuf(void) { value = nullptr; }
+
+	virtual void Write(void) {
+		if (StreamBufBase<ty>::os.str().length() > 0) {
+			value->emplace_back(StreamBufBase<ty>::os.str().c_str());
+		}
+		else {
+			value->emplace_back(L"");
+		}
+	}
+};
 #else
-#error unbekanntes Framework
+#error "unbekanntes Framework"
 #endif
 
 #if defined BUILD_WITH_VCL || defined BUILD_WITH_FMX
@@ -256,7 +286,7 @@ class LabelStreamBuf : public StreamBufBase<ty> {
          }
     };
 #else
-   #error unbekanntes Framework
+#error "unbekanntes Framework"
 #endif
 
 #if defined BUILD_WITH_VCL
@@ -329,7 +359,7 @@ public:
    }
 };
 #else
-   #error unbekanntes Framework
+#error "unbekanntes Framework"
 #endif
 
 #if defined BUILD_WITH_VCL || defined BUILD_WITH_FMX
@@ -389,7 +419,7 @@ public:
       }
    };
 #else
-#error unbekanntes Framework
+#pragma message("unbekanntes Framework")
 #endif
 
 
@@ -591,7 +621,7 @@ public:
    };
 
 #else
-#error This component should be implemented for this framework
+#pragma message("This component should be implemented for this framework")
 #endif
 
 
