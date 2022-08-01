@@ -134,13 +134,30 @@
 	{
 		std::vector<fw_String> data;
 	};
+
+	struct TLabel
+	{
+		std::string text;
+	};
+
+	struct TCombobox
+	{
+		std::string text;
+		std::vector<std::string> items;
+	};
+
+	struct TListbox
+	{
+		std::vector<std::string> items;
+	};
 		
 	using fw_Form		= Undefined;
 	using fw_Groupbox	= Undefined;
 	using fw_Edit		= Undefined;
-	using fw_Label		= Undefined;
-	using fw_Combobox	= Undefined;
-	using fw_Listbox	= Undefined;
+	using fw_Label		= TLabel;
+	using fw_Memo = TMemo;
+	using fw_Combobox	= TCombobox;
+	using fw_Listbox	= TListbox;
 	using fw_Checkbox	= Undefined;
 	using fw_Button		= Undefined;
 	using fw_Table		= Undefined;

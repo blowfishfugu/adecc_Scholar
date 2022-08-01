@@ -234,7 +234,7 @@ public:
 	}
 };
 #else
-static_assert( false, " "unbekanntes Framework"
+   static_assert(false, "unbekanntes Framework");
 #endif
 
 #if defined BUILD_WITH_VCL || defined BUILD_WITH_FMX
@@ -286,6 +286,23 @@ class LabelStreamBuf : public StreamBufBase<ty> {
             value->setText(QString::fromStdString(StreamBufBase<ty>::os.str()));
          }
     };
+#elif BUILD_WITH_NUKLEAR
+   template <typename ty>
+   class LabelStreamBuf : public StreamBufBase<ty> {
+   private:
+	   TLabel* value;
+   public:
+	   LabelStreamBuf(TLabel* para, bool boClean = true) : StreamBufBase<ty>() {
+		   value = para;
+		   if (boClean) value->text->clear();
+	   }
+
+	   virtual ~LabelStreamBuf(void) { value = nullptr; }
+
+	   virtual void Write(void) {
+			   value->text=std::string(StreamBufBase<ty>::os.str());
+	   }
+   };
 #else
 static_assert(false, "unbekanntes Framework");
 #endif
@@ -359,6 +376,29 @@ public:
       }
    }
 };
+#elif defined BUILD_WITH_NUKLEAR
+template <typename ty>
+class ListBoxStreamBuf : public StreamBufBase<ty> {
+private:
+	TListbox* value;
+public:
+	ListBoxStreamBuf(TListbox* para, bool boClean = true) : StreamBufBase<ty>() {
+		value = para;
+		if (boClean) value->items.clear();
+	}
+
+	virtual ~ListBoxStreamBuf(void) { value = nullptr; }
+
+	virtual void Write(void) {
+		if (StreamBufBase<ty>::os.str().length() > 0) {
+			value->items.emplace_back(StreamBufBase<ty>::os.str().c_str());
+		}
+		else {
+			value->items.emplace_back("");
+		}
+	}
+};
+
 #else
 static_assert(false, "unbekanntes Framework");
 #endif
@@ -419,6 +459,31 @@ public:
          }
       }
    };
+#elif defined BUILD_WITH_NUKLEAR
+template <typename ty>
+class ComboBoxStreamBuf : public StreamBufBase<ty> {
+private:
+	TCombobox* value;
+public:
+	ComboBoxStreamBuf(TCombobox* para, bool boClean = true) : StreamBufBase<ty>() {
+		value = para;
+		if (boClean) {
+			value->text = "";
+			value->items.clear();
+		}
+	}
+
+	virtual ~ComboBoxStreamBuf(void) { value = nullptr; }
+
+	virtual void Write(void) {
+		if (StreamBufBase<ty>::os.str().length() > 0) {
+			value->items.emplace_back(StreamBufBase<ty>::os.str().c_str());
+		}
+		else {
+			value->items.push_back("");
+		}
+	}
+};
 #else
 #pragma message("unbekanntes Framework")
 #endif
@@ -622,7 +687,7 @@ public:
    };
 
 #else
-#pragma message("This component should be implemented for this framework")
+static_assert(false, "This component should be implemented for this framework");
 #endif
 
 
