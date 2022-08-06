@@ -112,7 +112,7 @@ using tplFormElements = std::tuple<std::string, EMyFrameworkType, EMyAlignmentTy
 using vecFormElements = std::vector<tplFormElements>;
 using tplFormInformation = std::tuple<std::string, int>;
 using tplFormData = std::tuple<tplFormInformation, vecFormElements>;
-using mapFormsDictionary = std::map<std::string, tplFormData>;
+using mapFormsDictionary = std::map<std::string, std::tuple<tplFormInformation, vecFormElements> >;
 
 
 #endif

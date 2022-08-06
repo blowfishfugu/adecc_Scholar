@@ -54,7 +54,12 @@ private:
 							 { EMyAlignmentType::unknown, Qt::AlignVCenter | Qt::AlignLeft }
 	};
 #else
-	static_assert(false, "fehlende definition von align_type_conv in diesem Framework");
+	static const inline std::map<EMyAlignmentType, nk_text_alignment> align_type_conv = {
+							 { EMyAlignmentType::left,    NK_TEXT_LEFT },
+							 { EMyAlignmentType::right,   NK_TEXT_RIGHT },
+							 { EMyAlignmentType::center,  NK_TEXT_CENTERED },
+							 { EMyAlignmentType::unknown, NK_TEXT_LEFT }
+	};
 #endif
 
 public:

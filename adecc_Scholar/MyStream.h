@@ -324,7 +324,9 @@ class StatusStreamBuf : public StreamBufBase<ty> {
        virtual void Write(void) {
           value->SimpleText = StreamBufBase<ty>::os.str().c_str();
           }
-    };
+};
+#else
+static_assert(false, "no stream for statusstream-component defined");
 #endif
 
 #if defined BUILD_WITH_VCL || defined BUILD_WITH_FMX
