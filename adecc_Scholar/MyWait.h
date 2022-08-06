@@ -68,7 +68,7 @@ public:
 	~TMyWait(void) = default;
 };
 #else
-static_assert( false, " "Fehlende Klasse TMyWait in diesem Framework")
+static_assert(false, " "Fehlende Klasse TMyWait in diesem Framework")
 #endif
 
 
