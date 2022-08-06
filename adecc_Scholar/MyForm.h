@@ -104,7 +104,7 @@ public:
 #elif defined BUILD_WITH_QT
 		auto SetFunc = [this](fw_String const& val) { this->Form()->setWindowTitle(val); };
 #else
-static_assert( false, " fehlende Implementierung für SetCaption() in diesem Framework");
+		static_assert(false, " fehlende Implementierung für SetCaption() in diesem Framework");
 #endif
 		SetFunction(SetFunc, strCaption);
 	}
@@ -116,7 +116,7 @@ static_assert( false, " fehlende Implementierung für SetCaption() in diesem Fra
 #elif defined BUILD_WITH_QT
 		return Form()->objectName().toStdString();
 #else
-static_assert( false, " fehlende Implementierung für FormName() in diesem Framework");
+		static_assert(false, " fehlende Implementierung für FormName() in diesem Framework");
 #endif
 	}
 
@@ -213,7 +213,7 @@ static_assert( false, " fehlende Implementierung für FormName() in diesem Frame
 #elif defined BUILD_WITH_QT
 		auto set = [this](auto fld, Qt::Alignment align_val) { fld->setAlignment(align_val); };
 #else
-static_assert( false, " fehlende Implementierung von Alignment() in diesem Framework");
+		static_assert(false, " fehlende Implementierung von Alignment() in diesem Framework");
 #endif
 
 		if (auto myret = align_type_conv.find(align); myret != align_type_conv.end()) {
@@ -244,7 +244,7 @@ static_assert( false, " fehlende Implementierung von Alignment() in diesem Frame
 #elif defined BUILD_WITH_QT
 		auto set = [this](auto fld, bool boSet) { fld->setReadOnly(boSet); };
 #else
-static_assert( false, " fehlende Implementierung von Alignment() in diesem Framework");
+		static_assert(false, " fehlende Implementierung von Alignment() in diesem Framework");
 #endif
 
 		if constexpr (ft == EMyFrameworkType::edit)          set(Find<fw_Edit>(strField), boSet);
@@ -262,7 +262,7 @@ static_assert( false, " fehlende Implementierung von Alignment() in diesem Frame
 #elif defined BUILD_WITH_QT
 		auto set = [](auto fld, bool boSet) { fld->setVisible(boSet); };
 #else
-static_assert( false, " fehlende Implementierung von Visible() in diesem Framework");
+		static_assert(false, " fehlende Implementierung von Visible() in diesem Framework");
 #endif
 		if constexpr (ft == EMyFrameworkType::edit)     set(Find<fw_Edit>(strField), boVisible);
 		else if constexpr (ft == EMyFrameworkType::memo)     set(Find<fw_Memo>(strField), boVisible);
@@ -282,7 +282,7 @@ static_assert( false, " fehlende Implementierung von Visible() in diesem Framewo
 #elif defined BUILD_WITH_QT
 		auto set = [](auto fld, bool boSet) { fld->setEnabled(boSet); };
 #else
-static_assert( false, " fehlende Implementierung von Enable() in diesem Framework");
+		static_assert(false, " fehlende Implementierung von Enable() in diesem Framework");
 #endif
 		if constexpr (ft == EMyFrameworkType::edit) 	  set(Find<fw_Edit>(strField), boEnabled);
 		else if constexpr (ft == EMyFrameworkType::memo)     set(Find<fw_Memo>(strField), boEnabled);
@@ -421,7 +421,7 @@ static_assert( false, " fehlende Implementierung von Enable() in diesem Framewor
 		auto get_len = [](auto fld) -> int { return fld->text().length(); };
 		auto get_txt = [](auto fld) -> fw_String { return fld->text(); };
 #else
-static_assert( false, " Fehlende Implementierung für GetEdit in diesem Framework");
+		static_assert(false, " Fehlende Implementierung für GetEdit in diesem Framework");
 #endif
 		auto field = Find<fw_Edit>(strField);
 		if constexpr (is_optional<ty>::value) {
@@ -446,7 +446,7 @@ static_assert( false, " Fehlende Implementierung für GetEdit in diesem Framewor
 		field->clear();
 		std::for_each(values.cbegin(), values.cend(), [field](std::string const& value) { field->addItem(QString::fromStdString(value)); });
 #else
-static_assert( false, " Fehlende Implementierung für InitListBox für dieses Framework");
+		static_assert(false, " Fehlende Implementierung für InitListBox für dieses Framework");
 #endif
 	}
 
@@ -457,7 +457,7 @@ static_assert( false, " Fehlende Implementierung für InitListBox für dieses Fr
 #elif defined BUILD_WITH_QT
 		field->addItem(QString::fromStdString(value));
 #else
-static_assert( false, " Fehlende Implementierung für AddListBox für dieses Framework");
+		static_assert(false, " Fehlende Implementierung für AddListBox für dieses Framework");
 #endif
 	}
 
@@ -468,7 +468,7 @@ static_assert( false, " Fehlende Implementierung für AddListBox für dieses Fra
 #elif defined BUILD_WITH_QT
 		if (field->count() > 0) field->setCurrentRow(0);
 #else
-static_assert( false, " Fehlende Implementierung für SetFirstListbox für dieses Framework");
+		static_assert(false, " Fehlende Implementierung für SetFirstListbox für dieses Framework");
 #endif
 	}
 
@@ -493,7 +493,7 @@ static_assert( false, " Fehlende Implementierung für SetFirstListbox für diese
 		}
 		if (i < field->count()) field->setCurrentRow(0);
 #else
-static_assert( false, " Fehlende Implementierung für SetListbox für dieses Framework");
+		static_assert(false, " Fehlende Implementierung für SetListbox für dieses Framework");
 #endif
 	}
 
@@ -505,7 +505,7 @@ static_assert( false, " Fehlende Implementierung für SetListbox für dieses Fra
 #elif defined BUILD_WITH_QT
 		return field->currentItem()->text().toStdString();
 #else
-static_assert( false, " Fehlende Implementierung für SetListbox für dieses Framework");
+		static_assert(false, " Fehlende Implementierung für SetListbox für dieses Framework");
 #endif
 	}
 
@@ -516,7 +516,7 @@ static_assert( false, " Fehlende Implementierung für SetListbox für dieses Fra
 #elif defined BUILD_WITH_QT
 		if (field->count() > 0) field->setCurrentIndex(0);
 #else
-static_assert( false, " Fehlende Implementierung für SetFirstListbox für dieses Framework");
+		static_assert(false, " Fehlende Implementierung für SetFirstListbox für dieses Framework");
 #endif
 	}
 
@@ -548,7 +548,7 @@ static_assert( false, " Fehlende Implementierung für SetFirstListbox für diese
 #elif defined BUILD_WITH_QT
 		chosen = std::make_optional(box->checkState() == Qt::Checked); // partially possible, attention
 #else
-static_assert( false, " todo, define for new framework");
+		static_assert(false, " todo, define for new framework");
 #endif
 
 		if constexpr (is_optional<ty>::value) {
@@ -600,7 +600,7 @@ static_assert( false, " todo, define for new framework");
 			});
 		field->addItems(list);
 #else
-static_assert( false, " Fehlende Implementierung für InitListBox für dieses Framework");
+		static_assert(false, " Fehlende Implementierung für InitListBox für dieses Framework");
 #endif
 	}
 
@@ -748,7 +748,7 @@ static_assert( false, " Fehlende Implementierung für InitListBox für dieses Fr
 #elif defined BUILD_WITH_QT
 		auto GetFunc = [](auto* field, size_t index) { return field->item(index)->text(); };
 #else
-static_assert( false, " Fehlende Implementierung für Count_in_list für dieses Framework");
+		static_assert(false, " Fehlende Implementierung für Count_in_list für dieses Framework");
 #endif
 		// GetText<ty>(
 		ty ret;
@@ -775,7 +775,7 @@ static_assert( false, " Fehlende Implementierung für Count_in_list für dieses 
 		auto del_func2 = [](auto* field, size_t index) { delete field->takeItem(index); };
 		auto set_index = [](auto* field, size_t index) { field->setCurrentIndex(index); };
 #else
-static_assert( false, " Fehlende Implementierung für Count_in_list für dieses Framework");
+		static_assert(false, " Fehlende Implementierung für Count_in_list für dieses Framework");
 #endif
 		// Ablauf fehlt, aktuellen Index und Count prüfen 
 		size_t ret;
@@ -799,7 +799,7 @@ static_assert( false, " Fehlende Implementierung für Count_in_list für dieses 
 #elif defined BUILD_WITH_QT
 		auto CountFunc = [](auto* field) { return field->count(); };
 #else
-static_assert( false, " Fehlende Implementierung für Count_in_list für dieses Framework");
+		static_assert(false, " Fehlende Implementierung für Count_in_list für dieses Framework");
 #endif
 
 		size_t ret;
@@ -838,7 +838,7 @@ static_assert( false, " Fehlende Implementierung für Count_in_list für dieses 
 			{ QDialog::Rejected,     EMyRetResults::cancel }
 		};
 #else
-static_assert( false, " fehlende Implementierung für ShowModal()");
+		static_assert(false, " fehlende Implementierung für ShowModal()");
 #endif
 
 		if (auto myret = RetVals.find(call(Form())); myret != RetVals.end()) {
@@ -868,8 +868,8 @@ private:
 #elif defined BUILD_WITH_QT
 		auto* comp = Form()->findChild<QObject* >(QString::fromStdString(strField));
 #else
-static_assert( false, " keine Umsetzung von Find für dieses Framework");
-void* comp = nullptr;
+		static_assert(false, " keine Umsetzung von Find für dieses Framework");
+		void* comp = nullptr;
 #endif
 		if (!comp) {
 			std::ostringstream os;
@@ -977,7 +977,7 @@ void* comp = nullptr;
 		if constexpr (std::is_same<std::wstring, ty>::value)                   return value.toStdWString();
 		else if constexpr (is_qt_string<ty>::value)                            return value;
 #else
-static_assert( false, " fehlende Implementierung for GetText in diesem Framwork");
+		static_assert(false, " fehlende Implementierung for GetText in diesem Framwork");
 #endif
 		 else {
 #if defined BUILD_WITH_VCL || defined BUILD_WITH_FMX
@@ -985,7 +985,7 @@ static_assert( false, " fehlende Implementierung for GetText in diesem Framwork"
 #elif defined BUILD_WITH_QT
 		 std::string strValue = value.toStdString();
 #else
-static_assert( false, " fehlende Implementierung for GetText in diesem Framwork");
+		 static_assert(false, " fehlende Implementierung for GetText in diesem Framwork");
 #endif
 		 if constexpr (std::is_integral<ty>::value && !std::is_same<ty, bool>::value) return TMyTools::string_to_integral_fmt<ty>(strValue);
 		 else if constexpr (std::is_floating_point<ty>::value)                        return TMyTools::string_to_double_fmt(strValue);
@@ -1025,7 +1025,7 @@ static_assert( false, " fehlende Implementierung for GetText in diesem Framwork"
 			field->setCurrentText(strSeek);
 		};
 #else
-static_assert( false, " Fehlende Implementierung für interne SetCombobox Funktion in diesem Framework");
+		static_assert(false, " Fehlende Implementierung für interne SetCombobox Funktion in diesem Framework");
 #endif
 		if constexpr (is_optional<ty>::value) {
 			if (!value) {
