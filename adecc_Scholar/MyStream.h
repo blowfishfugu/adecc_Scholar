@@ -333,13 +333,13 @@ private:
 public:
 	StatusStreamBuf(TStatusBar* para, bool boClean = true) : StreamBufBase<ty>() {
 		value = para;
-		if (boClean) value->SimpleText.clear();
+		if (boClean) value->text.clear();
 	}
 
 	virtual ~StatusStreamBuf(void) { value = nullptr; }
 
 	virtual void Write(void) {
-		value->SimpleText = StreamBufBase<ty>::os.str().c_str();
+		value->text = StreamBufBase<ty>::os.str().c_str();
 	}
 };
 #else

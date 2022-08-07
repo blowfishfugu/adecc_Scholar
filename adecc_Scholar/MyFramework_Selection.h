@@ -132,39 +132,106 @@ struct Undefined {};
 
 struct TMemo
 {
-	std::vector<fw_String> data;
+	std::string name;
+	std::vector<std::string> data;
 };
 
 struct TLabel
 {
+	std::string name;
+	std::string text;
+};
+
+struct TEdit
+{
+	std::string name;
 	std::string text;
 };
 
 struct TCombobox
 {
+	std::string name;
 	std::string text;
 	std::vector<std::string> items;
 };
 
 struct TListbox
 {
+	std::string name;
 	std::vector<std::string> items;
+};
+
+struct TCheckbox
+{
+	std::string name;
+	std::string text;
+	int checkstate = 0; //tristate?
+};
+
+struct TButton
+{
+	std::string name;
+	std::string text;
+	std::function<void()> onClick = nullptr;
 };
 
 struct TStatusBar
 {
-	std::string SimpleText;
+	std::string name;
+	std::string text;
+	int& window_height;
+	int& window_width;
+	int status_height;
+	TStatusBar() = delete;
+	TStatusBar(const TStatusBar&) = delete;
+	TStatusBar(int& h, int& w)
+		:
+		window_height(h),
+		window_width(w),
+		status_height(30)
+	{}
+	void draw(nk_context* ctx)
+	{
+		if (nk_begin(ctx, name.c_str(), 
+			nk_rect(0, window_height - status_height, 
+					window_width, status_height),
+			NK_WINDOW_BORDER | NK_WINDOW_NO_SCROLLBAR
+		))
+		{
+			nk_layout_row_dynamic(ctx, ctx->current->bounds.h, 1);
+			nk_label(ctx, text.c_str(), NK_TEXT_CENTERED);
+		}
+		nk_end(ctx);
+	}
+};
+
+struct TGroupBox
+{
+	std::string name;
+	std::string title;
+	std::vector<std::function<void(nk_context*)>> component_funcs;
+	void draw(nk_context* ctx)
+	{
+		nk_group_begin_titled(ctx, name.c_str(), title.c_str(), nk_panel_flags::NK_WINDOW_BORDER);
+		nk_layout_row_begin(ctx, nk_layout_format::NK_STATIC, 20, 1);
+		for (auto& child : component_funcs)
+		{
+			child(ctx);
+		}
+		nk_layout_row_end(ctx);
+		nk_group_end(ctx);
+	}
 };
 
 using fw_Form = Undefined; //nk_begin..subcontrols..nk_end
-using fw_Groupbox = Undefined; //nk_group + nk_option_labels?
-using fw_Edit = Undefined; //nk_edit_string /NK_EDIT_FIELD
+using fw_Groupbox = TGroupBox; //nk_group + nk_option_labels?
+using fw_Edit = TEdit; //nk_edit_string /NK_EDIT_FIELD
 using fw_Label = TLabel; //nk_label(_colored/_wrap), nk_text
 using fw_Memo = TMemo; //nk_layout_row(height..) + nk_edit_string /NK_EDIT_BOX
 using fw_Combobox = TCombobox; //nk_combo
 using fw_Listbox = TListbox; //nk_selectable_label + array_index
-using fw_Checkbox = Undefined; //nk_checkbox_label
-using fw_Button = Undefined; //nk_button(_label/symbol/symbol_label)
+using fw_Checkbox = TCheckbox; //nk_checkbox_label
+using fw_Button = TButton; //nk_button(_label/symbol/symbol_label)
 using fw_Table = Undefined; //nk_layout_row_static(...,cols)
 using fw_Statusbar = TStatusBar; //nk_begin(NO_TITLE, bounds=viewPort.width usw.) +nk_label
 
