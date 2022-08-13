@@ -706,7 +706,70 @@ public:
 };
 
 #else
-static_assert(false, "This component should be implemented for this framework");
+template <typename ty>
+class ListViewStreamBuf : public ListStreamBufBase<ty> {
+private:
+	TGrid* tw = nullptr;
+	int          iColumn = 0;
+	int          iRow = 0;
+	static inline std::map<EMyAlignmentType, nk_text_alignment> Align = {
+										 { EMyAlignmentType::left,    NK_TEXT_LEFT },
+										 { EMyAlignmentType::right,   NK_TEXT_RIGHT },
+										 { EMyAlignmentType::center,  NK_TEXT_CENTERED },
+										 { EMyAlignmentType::unknown, NK_TEXT_LEFT }
+	};
+
+
+public:
+	ListViewStreamBuf(TGrid* para, std::vector<tplList<ty>> const& caps, bool boClean = true) : ListStreamBufBase<ty>(caps) {
+		tw = para;
+		iColumn = 0;
+		iRow = 0;
+
+		if (boClean) {
+			tw->clear();
+			tw->Columns.resize(ListStreamBufBase<ty>::captions.size());
+			for (int i = 0; i < ListStreamBufBase<ty>::captions.size(); ++i) {
+				tplList<Narrow> const& caption = ListStreamBufBase<ty>::captions[i];
+				TGrid::THeadItem& head = tw->Columns[i];
+				head.caption= std::get<0>(caption);
+				head.alignment = std::get<2>(caption);
+				head.nk_alignment=(Align[std::get<2>(caption)]);
+				head.width=std::get<1>(caption);
+			}
+		}
+	}
+
+	virtual ~ListViewStreamBuf(void) { tw = nullptr; }
+
+	virtual void NewLine(void) { iColumn = 0; }
+
+	virtual void Write(void) {
+		if (iColumn == 0) {
+			if (iRow == 0) {
+				iRow = 1;
+				tw->Rows.resize(1);
+			}
+			else if (iRow > tw->rowCount()) {
+				iRow = tw->rowCount() + 1;
+				tw->Rows.resize(iRow);  // only row because column empty
+			}
+			else {
+				tw->Rows.resize(tw->rowCount() + 1);
+				iRow = tw->rowCount();
+			}
+		}
+		tplList<Narrow> const& caption = ListStreamBufBase<ty>::captions[iColumn];
+		
+		//achtung, iRow ist 1-basiert
+		std::vector<std::string>& Row = tw->Rows[iRow - 1];
+		if (Row.size() < tw->Columns.size())
+		{
+			Row.resize(tw->Columns.size())
+		}
+		Row[iColumn++] = StreamBufBase<ty>::os.str();
+	}
+};
 #endif
 
 
@@ -760,6 +823,8 @@ public:
 		Reset();
 		old = str.rdbuf(new MemoStreamBuf<ty_base>(elem));
 	}
+#else
+	static_assert(false, "Missing Activate(TMemo)");
 #endif
 
 #if defined BUILD_WITH_VCL || defined BUILD_WITH_FMX
@@ -772,6 +837,8 @@ public:
 		Reset();
 		old = str.rdbuf(new LabelStreamBuf<ty_base>(elem));
 	}
+#else
+	static_assert(false, "Missing Activate(TLabel)");
 #endif
 
 #if defined BUILD_WITH_VCL
@@ -779,6 +846,8 @@ public:
 		Reset();
 		old = str.rdbuf(new StatusStreamBuf<ty_base>(elem));
 	}
+#else
+	static_assert(false, "Missing Activate(TStatusBar)");
 #endif
 
 #if defined BUILD_WITH_VCL || defined BUILD_WITH_FMX
@@ -791,6 +860,8 @@ public:
 		Reset();
 		old = str.rdbuf(new ListBoxStreamBuf<ty_base>(elem));
 	}
+#else
+	static_assert(false, "Missing Activate(TListBox)");
 #endif
 
 #if defined BUILD_WITH_VCL || defined BUILD_WITH_FMX
@@ -803,7 +874,8 @@ public:
 		Reset();
 		old = str.rdbuf(new ComboBoxStreamBuf<ty_base>(elem));
 	}
-
+#else
+	static_assert(false, "Missing Activate(TComboBox)");
 #endif
 
 #if defined BUILD_WITH_VCL
@@ -821,7 +893,8 @@ public:
 		Reset();
 		old = str.rdbuf(new ListViewStreamBuf<ty_base>(elem, caps));
 	}
-
+#else
+	static_assert(false, "Missing Activate(TListView)");
 #endif
 
 
