@@ -223,6 +223,16 @@ struct TGroupBox
 	}
 };
 
+struct TGrid {
+	struct THeadItem {
+		std::string caption;
+		nk_text_alignment nk_alignment; //translated, ref in MyForm.h
+		EMyAlignmentType alignment; //<-framework
+	};
+	std::vector<THeadItem> Columns;
+	std::vector<std::vector<std::string>> Rows;
+};
+
 using fw_Form = Undefined; //nk_begin..subcontrols..nk_end
 using fw_Groupbox = TGroupBox; //nk_group + nk_option_labels?
 using fw_Edit = TEdit; //nk_edit_string /NK_EDIT_FIELD
@@ -232,7 +242,7 @@ using fw_Combobox = TCombobox; //nk_combo
 using fw_Listbox = TListbox; //nk_selectable_label + array_index
 using fw_Checkbox = TCheckbox; //nk_checkbox_label
 using fw_Button = TButton; //nk_button(_label/symbol/symbol_label)
-using fw_Table = Undefined; //nk_layout_row_static(...,cols)
+using fw_Table = TGrid; //nk_layout_row_static(...,cols)
 using fw_Statusbar = TStatusBar; //nk_begin(NO_TITLE, bounds=viewPort.width usw.) +nk_label
 
 #else
