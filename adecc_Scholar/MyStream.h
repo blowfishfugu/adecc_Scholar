@@ -840,6 +840,11 @@ public:
 		Reset();
 		old = str.rdbuf(new LabelStreamBuf<ty_base>(elem));
 	}
+#elif defined BUILD_WITH_NUKLEAR
+	void Activate(nk::TLabel* elem) {
+		Reset();
+		old = str.rdbuf(new LabelStreamBuf<ty_base>(elem));
+	}
 #else
 	static_assert(false, "Missing Activate(TLabel)");
 #endif
@@ -849,6 +854,11 @@ public:
 		Reset();
 		old = str.rdbuf(new StatusStreamBuf<ty_base>(elem));
 	}
+#elif defined BUILD_WITH_NUKLEAR
+void Activate(nk::TStatusBar* elem) {
+	Reset();
+	old = str.rdbuf(new StatusStreamBuf<ty_base>(elem));
+}
 #else
 	static_assert(false, "Missing Activate(TStatusBar)");
 #endif
@@ -863,6 +873,11 @@ public:
 		Reset();
 		old = str.rdbuf(new ListBoxStreamBuf<ty_base>(elem));
 	}
+#elif defined BUILD_WITH_NUKLEAR
+	void Activate(nk::TListbox* elem) {
+		Reset();
+		old = str.rdbuf(new ListBoxStreamBuf<ty_base>(elem));
+	}
 #else
 	static_assert(false, "Missing Activate(TListBox)");
 #endif
@@ -874,6 +889,11 @@ public:
 	}
 #elif defined BUILD_WITH_QT
 	void Activate(QComboBox* elem) {
+		Reset();
+		old = str.rdbuf(new ComboBoxStreamBuf<ty_base>(elem));
+	}
+#elif defined BUILD_WITH_NUKLEAR
+	void Activate(nk::TCombobox* elem) {
 		Reset();
 		old = str.rdbuf(new ComboBoxStreamBuf<ty_base>(elem));
 	}
@@ -893,6 +913,11 @@ public:
 	}
 #elif defined BUILD_WITH_QT
 	void Activate(QTableWidget* elem, std::vector<tplList<ty_base>> const& caps) {
+		Reset();
+		old = str.rdbuf(new ListViewStreamBuf<ty_base>(elem, caps));
+	}
+#elif defined BUILD_WITH_NUKLEAR
+	void Activate(nk::TGrid* elem, std::vector<tplList<ty_base>> const& caps) {
 		Reset();
 		old = str.rdbuf(new ListViewStreamBuf<ty_base>(elem, caps));
 	}

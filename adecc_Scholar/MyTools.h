@@ -254,7 +254,7 @@ class TMyTools {
 
 		auto iLen = src.find(cThousand);
 		if (iLen == std::string::npos) iLen = src.length();
-		auto d = std::div(iLen, 3);
+		auto d = std::div(static_cast<int>(iLen), 3);
 		if (d.quot > 0) {
 			auto start = d.rem == 0 ? 3 : d.rem;
 			for (auto a = start == 3 ? 1 : 0; a < d.quot; ++a) {
