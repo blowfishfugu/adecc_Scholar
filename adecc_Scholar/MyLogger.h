@@ -23,7 +23,13 @@ std::string TimeStamp(void) {
    auto const now =  std::chrono::system_clock::now();
    const std::time_t time = std::chrono::system_clock::to_time_t(now);
    const auto millis = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
-   os << std::put_time(std::localtime(&time), "%d.%m.%Y %X"); 
+#ifndef _CRT_SECURE_NO_WARNINGS
+   std::tm loctime;
+   localtime_s(&loctime, &time);
+   os << std::put_time(&loctime, "%d.%m.%Y %X"); 
+#else
+   os << std::put_time(std::localtime(&time), "%d.%m.%Y %X");
+#endif
    os << "," << std::setfill('0') << std::setw(3) << millis.count();
    return os.str();
    #endif

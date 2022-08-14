@@ -29,7 +29,7 @@
 #include <QHeaderView>
 
 #elif defined BUILD_WITH_NUKLEAR
-
+//nuklear + nuk_controls, bereits da über MyFramework_Selection
 #else
 static_assert(false, " Für diese Bibliothek muss ein Framework definiert sein.
 #endif
@@ -213,9 +213,9 @@ public:
 template <typename ty>
 class MemoStreamBuf : public StreamBufBase<ty> {
 private:
-	TMemo* value;
+	nk::TMemo* value;
 public:
-	MemoStreamBuf(TMemo* para, bool boClean = true) : StreamBufBase<ty>() {
+	MemoStreamBuf(nk::TMemo* para, bool boClean = true) : StreamBufBase<ty>() {
 		value = para;
 
 		if (boClean)
@@ -229,12 +229,12 @@ public:
 			value->data.emplace_back(StreamBufBase<ty>::os.str().c_str());
 		}
 		else {
-			value->data.emplace_back(L"");
+			value->data.emplace_back(ty::strEmpty);
 		}
 	}
 };
 #else
-static_assert(false, "unbekanntes Framework");
+static_assert(false, "unbekanntes Framework, MemoStreamBuf");
 #endif
 
 #if defined BUILD_WITH_VCL || defined BUILD_WITH_FMX
@@ -290,9 +290,9 @@ public:
 template <typename ty>
 class LabelStreamBuf : public StreamBufBase<ty> {
 private:
-	TLabel* value;
+	nk::TLabel* value;
 public:
-	LabelStreamBuf(TLabel* para, bool boClean = true) : StreamBufBase<ty>() {
+	LabelStreamBuf(nk::TLabel* para, bool boClean = true) : StreamBufBase<ty>() {
 		value = para;
 		if (boClean) value->text->clear();
 	}
@@ -304,7 +304,7 @@ public:
 	}
 };
 #else
-static_assert(false, "unbekanntes Framework");
+static_assert(false, "unbekanntes Framework, LabelStreamBuf");
 #endif
 
 #if defined BUILD_WITH_VCL
@@ -329,9 +329,9 @@ public:
 template <typename ty>
 class StatusStreamBuf : public StreamBufBase<ty> {
 private:
-	TStatusBar* value;
+	nk::TStatusBar* value;
 public:
-	StatusStreamBuf(TStatusBar* para, bool boClean = true) : StreamBufBase<ty>() {
+	StatusStreamBuf(nk::TStatusBar* para, bool boClean = true) : StreamBufBase<ty>() {
 		value = para;
 		if (boClean) value->text.clear();
 	}
@@ -399,9 +399,9 @@ public:
 template <typename ty>
 class ListBoxStreamBuf : public StreamBufBase<ty> {
 private:
-	TListbox* value;
+	nk::TListbox* value;
 public:
-	ListBoxStreamBuf(TListbox* para, bool boClean = true) : StreamBufBase<ty>() {
+	ListBoxStreamBuf(nk::TListbox* para, bool boClean = true) : StreamBufBase<ty>() {
 		value = para;
 		if (boClean) value->items.clear();
 	}
@@ -413,13 +413,13 @@ public:
 			value->items.emplace_back(StreamBufBase<ty>::os.str().c_str());
 		}
 		else {
-			value->items.emplace_back("");
+			value->items.emplace_back(ty::strEmpty);
 		}
 	}
 };
 
 #else
-static_assert(false, "unbekanntes Framework");
+static_assert(false, "unbekanntes Framework, ListBoxStreamBuf");
 #endif
 
 #if defined BUILD_WITH_VCL || defined BUILD_WITH_FMX
@@ -482,9 +482,9 @@ public:
 template <typename ty>
 class ComboBoxStreamBuf : public StreamBufBase<ty> {
 private:
-	TCombobox* value;
+	nk::TCombobox* value;
 public:
-	ComboBoxStreamBuf(TCombobox* para, bool boClean = true) : StreamBufBase<ty>() {
+	ComboBoxStreamBuf(nk::TCombobox* para, bool boClean = true) : StreamBufBase<ty>() {
 		value = para;
 		if (boClean) {
 			value->text = "";
@@ -499,12 +499,12 @@ public:
 			value->items.emplace_back(StreamBufBase<ty>::os.str().c_str());
 		}
 		else {
-			value->items.push_back("");
+			value->items.push_back(ty::strEmpty);
 		}
 	}
 };
 #else
-#pragma message("unbekanntes Framework")
+static_assert(false, "unbekanntes Framework, ComboBoxStreamBuf");
 #endif
 
 
@@ -705,11 +705,11 @@ public:
 	}
 };
 
-#else
+#elif defined BUILD_WITH_NUKLEAR
 template <typename ty>
 class ListViewStreamBuf : public ListStreamBufBase<ty> {
 private:
-	TGrid* tw = nullptr;
+	nk::TGrid* tw = nullptr;
 	int          iColumn = 0;
 	int          iRow = 0;
 	static inline std::map<EMyAlignmentType, nk_text_alignment> Align = {
@@ -721,7 +721,7 @@ private:
 
 
 public:
-	ListViewStreamBuf(TGrid* para, std::vector<tplList<ty>> const& caps, bool boClean = true) : ListStreamBufBase<ty>(caps) {
+	ListViewStreamBuf(nk::TGrid* para, std::vector<tplList<ty>> const& caps, bool boClean = true) : ListStreamBufBase<ty>(caps) {
 		tw = para;
 		iColumn = 0;
 		iRow = 0;
@@ -731,7 +731,8 @@ public:
 			tw->Columns.resize(ListStreamBufBase<ty>::captions.size());
 			for (int i = 0; i < ListStreamBufBase<ty>::captions.size(); ++i) {
 				tplList<Narrow> const& caption = ListStreamBufBase<ty>::captions[i];
-				TGrid::THeadItem& head = tw->Columns[i];
+				
+				nk::TGrid::THeadItem& head = tw->Columns[i];
 				head.caption= std::get<0>(caption);
 				head.alignment = std::get<2>(caption);
 				head.nk_alignment=(Align[std::get<2>(caption)]);
@@ -765,11 +766,13 @@ public:
 		std::vector<std::string>& Row = tw->Rows[iRow - 1];
 		if (Row.size() < tw->Columns.size())
 		{
-			Row.resize(tw->Columns.size())
+			Row.resize(tw->Columns.size());
 		}
 		Row[iColumn++] = StreamBufBase<ty>::os.str();
 	}
 };
+#else
+static_assert(false, "unbekanntes Framework, ListViewStreamBuf");
 #endif
 
 
@@ -819,7 +822,7 @@ public:
 		old = str.rdbuf(new MemoStreamBuf<ty_base>(elem));
 	}
 #elif defined BUILD_WITH_NUKLEAR
-	void Activate(TMemo* elem) {
+	void Activate(nk::TMemo* elem) {
 		Reset();
 		old = str.rdbuf(new MemoStreamBuf<ty_base>(elem));
 	}
