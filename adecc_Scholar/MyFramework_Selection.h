@@ -117,6 +117,17 @@ using fw_Table = QTableWidget;
 using fw_Statusbar = QStatusBar;
 
 #elif defined BUILD_WITH_NUKLEAR
+
+#define NK_INCLUDE_FIXED_TYPES
+//#define NK_INCLUDE_STANDARD_IO
+#define NK_INCLUDE_STANDARD_VARARGS
+#define NK_INCLUDE_DEFAULT_ALLOCATOR
+#define NK_INCLUDE_VERTEX_BUFFER_OUTPUT
+#define NK_INCLUDE_FONT_BAKING
+#define NK_INCLUDE_DEFAULT_FONT
+#define NK_IMPLEMENTATION
+#define NK_D3D11_IMPLEMENTATION
+
 #include <nuklear.h>
 #include <nuk_controls.h>
 struct is_delpi_compatible : std::false_type {};
