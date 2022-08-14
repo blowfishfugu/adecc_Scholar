@@ -455,7 +455,7 @@ public:
 		auto get_len = [](auto fld) -> int { return fld->text().length(); };
 		auto get_txt = [](auto fld) -> fw_String { return fld->text(); };
 #elif defined BUILD_WITH_NUKLEAR
-		auto get_len = [](auto fld) -> int { return fld->text.length(); };
+		auto get_len = [](auto fld) -> int { return static_cast<int>(fld->text.length()); };
 		auto get_txt = [](auto fld) -> fw_String { return fld->text; };
 #else
 		static_assert(false, " Fehlende Implementierung für GetEdit in diesem Framework");
