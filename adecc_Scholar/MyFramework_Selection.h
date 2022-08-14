@@ -117,7 +117,7 @@ using fw_Table = QTableWidget;
 using fw_Statusbar = QStatusBar;
 
 #elif defined BUILD_WITH_NUKLEAR
-#include <nuklear.h>
+
 #include <nuk_controls.h>
 struct is_delpi_compatible : std::false_type {};
 struct is_vcl_compile : std::false_type {};
@@ -130,7 +130,7 @@ struct Undefined {};
 
 
 
-using fw_Form = Undefined; //nk_begin..subcontrols..nk_end
+using fw_Form = nk::NKForm; //nk_begin..subcontrols..nk_end
 using fw_Groupbox = nk::TGroupBox; //nk_group + nk_option_labels?
 using fw_Edit = nk::TEdit; //nk_edit_string /NK_EDIT_FIELD
 using fw_Label = nk::TLabel; //nk_label(_colored/_wrap), nk_text
