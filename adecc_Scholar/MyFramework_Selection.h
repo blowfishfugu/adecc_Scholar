@@ -117,7 +117,6 @@ using fw_Table = QTableWidget;
 using fw_Statusbar = QStatusBar;
 
 #elif defined BUILD_WITH_NUKLEAR
-
 #define NK_INCLUDE_FIXED_TYPES
 //#define NK_INCLUDE_STANDARD_IO
 #define NK_INCLUDE_STANDARD_VARARGS
@@ -126,8 +125,6 @@ using fw_Statusbar = QStatusBar;
 #define NK_INCLUDE_FONT_BAKING
 #define NK_INCLUDE_DEFAULT_FONT
 #define NK_IMPLEMENTATION
-#define NK_D3D11_IMPLEMENTATION
-
 #include <nuklear.h>
 #include <nuk_controls.h>
 struct is_delpi_compatible : std::false_type {};
@@ -141,7 +138,7 @@ struct Undefined {};
 
 
 
-using fw_Form = Undefined; //nk_begin..subcontrols..nk_end
+using fw_Form = nk::NKForm; //nk_begin..subcontrols..nk_end
 using fw_Groupbox = nk::TGroupBox; //nk_group + nk_option_labels?
 using fw_Edit = nk::TEdit; //nk_edit_string /NK_EDIT_FIELD
 using fw_Label = nk::TLabel; //nk_label(_colored/_wrap), nk_text

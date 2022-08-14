@@ -5,7 +5,6 @@
 #include "MyStream.h"
 #include "MyTools.h"
 #include "MyStdTypes.h"
-#include "MyFramework_Selection.h"
 
 #include <string>
 #include <stdexcept>
@@ -18,6 +17,7 @@
 #include <iomanip>
 #include <typeinfo>
 #include <functional>
+#include <locale>
 
 #include "MyWait.h"
 
@@ -92,6 +92,8 @@ public:
 		return AnsiString(Form()->Caption).c_str();
 #elif defined BUILD_WITH_QT
 		return Form()->windowTitle().toStdString();
+#elif defined BUILD_WITH_NUKLEAR
+		return Form()->title;
 #else
 		static_assert(false, "fehlende Implementierung für SetCaption() in diesem Framework");
 #endif
@@ -103,6 +105,8 @@ public:
 		auto SetFunc = [this](fw_String const& val) { this->Form()->Caption = val; };
 #elif defined BUILD_WITH_QT
 		auto SetFunc = [this](fw_String const& val) { this->Form()->setWindowTitle(val); };
+#elif defined BUILD_WITH_NUKLEAR
+		auto SetFunc = [this](fw_String const& val) { this->Form()->title=val; };
 #else
 		static_assert(false, " fehlende Implementierung für SetCaption() in diesem Framework");
 #endif
@@ -115,6 +119,8 @@ public:
 		return AnsiString(Form()->Name).c_str();   ///< todo AnsiString eleminating
 #elif defined BUILD_WITH_QT
 		return Form()->objectName().toStdString();
+#elif defined BUILD_WITH_NUKLEAR
+		return Form()->name;
 #else
 		static_assert(false, " fehlende Implementierung für FormName() in diesem Framework");
 #endif
@@ -135,6 +141,8 @@ public:
 			wrapper.Activate(Find<fw_Statusbar>(strName));
 #elif defined BUILD_WITH_FMX || defined BUILD_WITH_QT
 			wrapper.Activate(Find<fw_Label>(strName));
+#elif defined BUILD_WITH_NUKLEAR
+			wrapper.Activate(Find<fw_Statusbar>(strName));
 #endif
 		}
 		// Aktivierung einer Liste nicht mehr möglich, da Überschriften benötigt werden
@@ -212,6 +220,8 @@ public:
 		auto set = [this](auto fld, TTextAlign align_val) { fld->TextSettings->HorzAlign = align_val; };
 #elif defined BUILD_WITH_QT
 		auto set = [this](auto fld, Qt::Alignment align_val) { fld->setAlignment(align_val); };
+#elif defined BUILD_WITH_NUKLEAR
+		auto set = [this](auto fld, nk_text_alignment align_val) { fld->nk_alignment=align_val; };
 #else
 		static_assert(false, " fehlende Implementierung von Alignment() in diesem Framework");
 #endif
@@ -243,8 +253,10 @@ public:
 		auto set = [this](auto fld, bool boSet) { fld->ReadOnly = boSet; };
 #elif defined BUILD_WITH_QT
 		auto set = [this](auto fld, bool boSet) { fld->setReadOnly(boSet); };
+#elif defined BUILD_WITH_NUKLEAR
+		auto set = [this](auto fld, bool boSet) { fld->readonly = boSet?1:0; };
 #else
-		static_assert(false, " fehlende Implementierung von Alignment() in diesem Framework");
+		static_assert(false, " fehlende Implementierung von ReadOnly() in diesem Framework");
 #endif
 
 		if constexpr (ft == EMyFrameworkType::edit)          set(Find<fw_Edit>(strField), boSet);
@@ -261,6 +273,8 @@ public:
 		auto set = [this](auto fld, bool boSet) { fld->Visible = boSet; };
 #elif defined BUILD_WITH_QT
 		auto set = [](auto fld, bool boSet) { fld->setVisible(boSet); };
+#elif defined BUILD_WITH_NUKLEAR
+		auto set = [](auto fld, bool boSet) { fld->visible=boSet?1:0; };
 #else
 		static_assert(false, " fehlende Implementierung von Visible() in diesem Framework");
 #endif
@@ -281,6 +295,8 @@ public:
 		auto set = [this](auto fld, bool boSet) { fld->Enabled = boSet; };
 #elif defined BUILD_WITH_QT
 		auto set = [](auto fld, bool boSet) { fld->setEnabled(boSet); };
+#elif defined BUILD_WITH_NUKLEAR
+		auto set = [](auto fld, bool boSet) { fld->enabled=boSet?1:0; };
 #else
 		static_assert(false, " fehlende Implementierung von Enable() in diesem Framework");
 #endif
@@ -309,6 +325,8 @@ public:
 			auto SetFunc = [this, strField](fw_String const& val) { this->Find<fw_Edit>(strField)->Text = val; };
 #elif defined BUILD_WITH_QT
 			auto SetFunc = [this, strField](fw_String const& val) { this->Find<fw_Edit>(strField)->setText(val); };
+#elif defined BUILD_WITH_NUKLEAR
+			auto SetFunc = [this, strField](fw_String const& val) { this->Find<fw_Edit>(strField)->text=val; };
 #endif
 			SetFunction(SetFunc, value, iLen, iScale);
 		}
@@ -319,6 +337,8 @@ public:
 #if defined BUILD_WITH_VCL || defined BUILD_WITH_FMX
 			auto SetFunc = [this, strField](fw_String const& val) { this->Find<fw_Memo>(strField)->Text = val; };
 #elif defined BUILD_WITH_QT
+			auto SetFunc = [this, strField](fw_String const& val) { this->Find<fw_Memo>(strField)->setText(val); };
+#elif defined BUILD_WITH_NUKLEAR
 			auto SetFunc = [this, strField](fw_String const& val) { this->Find<fw_Memo>(strField)->setText(val); };
 #endif
 			SetFunction(SetFunc, value, iLen, iScale);
@@ -333,6 +353,8 @@ public:
 			auto SetFunc = [this, strField](fw_String const& val) { this->Find<fw_Label>(strField)->Text = val; };
 #elif defined BUILD_WITH_QT
 			auto SetFunc = [this, strField](fw_String const& val) { this->Find<fw_Label>(strField)->setText(val); };
+#elif defined BUILD_WITH_NUKLEAR
+			auto SetFunc = [this, strField](fw_String const& val) { this->Find<fw_Label>(strField)->text=val; };
 #endif
 			SetFunction(SetFunc, value, iLen, iScale);
 		}
@@ -346,6 +368,8 @@ public:
 			auto SetFunc = [this, strField](fw_String const& val) { this->Find<fw_Groupbox>(strField)->Text = val; };
 #elif defined BUILD_WITH_QT
 			auto SetFunc = [this, strField](fw_String const& val) { this->Find<fw_Groupbox>(strField)->setTitle(val); };
+#elif defined BUILD_WITH_NUKLEAR
+			auto SetFunc = [this, strField](fw_String const& val) { this->Find<fw_Groupbox>(strField)->title=val; };
 #endif
 			SetFunction(SetFunc, value);
 		}
@@ -379,7 +403,10 @@ public:
 			auto SetBool = [this, strField](bool val) { this->Find<fw_Checkbox>(strField)->IsChecked = val; };
 #elif defined BUILD_WITH_QT
 			auto SetFunc = [this, strField](fw_String const& val) { this->Find<fw_Checkbox>(strField)->setText(val); };
-			auto SetBool = [this, strField](bool val) { this->Find<fw_Checkbox>(strField)->setCheckState(val ? Qt::Checked : Qt::Unchecked); };
+			auto SetBool = [this, strField](fw_String const& val) { this->Find<fw_Checkbox>(strField)->setText(val); };
+#elif defined BUILD_WITH_NUKLEAR
+			auto SetFunc = [this, strField](fw_String const& val) { this->Find<fw_Checkbox>(strField)->text=val; };
+			auto SetBool = [this, strField](bool val) { this->Find<fw_Checkbox>(strField)->checkstate=val; };
 #endif
 			if constexpr (is_bool_param<ty>::value)         SetBool(value);
 			else if constexpr (is_number_param<ty>::value)  SetBool(value != 0);
@@ -395,6 +422,8 @@ public:
 			auto SetFunc = [this, strField](fw_String const& val) { this->Find<fw_Button>(strField)->Text = val; };
 #elif defined BUILD_WITH_QT
 			auto SetFunc = [this, strField](fw_String const& val) { this->Find<fw_Button>(strField)->setText(val); };
+#elif defined BUILD_WITH_NUKLEAR
+			auto SetFunc = [this, strField](fw_String const& val) { this->Find<fw_Button>(strField)->text=val; };
 #endif
 			SetFunction(SetFunc, value);
 		}
@@ -402,6 +431,11 @@ public:
 		else if constexpr (ft == EMyFrameworkType::statusbar) {
 			auto SetFunc = [this, strField](fw_String const& val) { this->Find<TStatusBar>(strField)->SimpleText = val; };
 			SetFunction(SetFunc, value);
+		}
+#elif defined BUILD_WITH_NUKLEAR
+		else if constexpr (ft == EMyFrameworkType::statusbar) {
+		auto SetFunc = [this, strField](fw_String const& val) { this->Find<fw_Statusbar>(strField)->text = val; };
+		SetFunction(SetFunc, value);
 		}
 #endif
 
@@ -420,6 +454,9 @@ public:
 #elif defined BUILD_WITH_QT
 		auto get_len = [](auto fld) -> int { return fld->text().length(); };
 		auto get_txt = [](auto fld) -> fw_String { return fld->text(); };
+#elif defined BUILD_WITH_NUKLEAR
+		auto get_len = [](auto fld) -> int { return fld->text.length(); };
+		auto get_txt = [](auto fld) -> fw_String { return fld->text; };
 #else
 		static_assert(false, " Fehlende Implementierung für GetEdit in diesem Framework");
 #endif
@@ -445,6 +482,9 @@ public:
 #elif defined BUILD_WITH_QT
 		field->clear();
 		std::for_each(values.cbegin(), values.cend(), [field](std::string const& value) { field->addItem(QString::fromStdString(value)); });
+#elif defined BUILD_WITH_NUKLEAR
+		field->items.clear();
+		std::for_each(values.cbegin(), values.cend(), [field](std::string const& value) { field->items.emplace_back(value.c_str()); });
 #else
 		static_assert(false, " Fehlende Implementierung für InitListBox für dieses Framework");
 #endif
@@ -456,6 +496,8 @@ public:
 		field->Items->Add(value.c_str());
 #elif defined BUILD_WITH_QT
 		field->addItem(QString::fromStdString(value));
+#elif defined BUILD_WITH_NUKLEAR
+		field->items.emplace_back(value.c_str());
 #else
 		static_assert(false, " Fehlende Implementierung für AddListBox für dieses Framework");
 #endif
@@ -467,6 +509,8 @@ public:
 		if (field->Items->Count > 0) field->ItemIndex = 0;
 #elif defined BUILD_WITH_QT
 		if (field->count() > 0) field->setCurrentRow(0);
+#elif defined BUILD_WITH_NUKLEAR
+		if (field->count() > 0) field->itemindex = 0;
 #else
 		static_assert(false, " Fehlende Implementierung für SetFirstListbox für dieses Framework");
 #endif
@@ -492,6 +536,16 @@ public:
 			if (itemSeek->text() == item->text()) break;
 		}
 		if (i < field->count()) field->setCurrentRow(0);
+#elif defined BUILD_WITH_NUKLEAR
+		//value finden, index zurückgeben?
+		if (field->count() > 0) {
+			fw_String strSeek = boCaseSensitive ? value.c_str() : TMyTools::lower(value).c_str();
+			int i = 0;
+			for (; i < field->count(); ++i) {
+				if (strSeek == (boCaseSensitive ? field->items[i] : TMyTools::lower(field->items[i]))) break;
+			}
+			if (i < field->count()) field->itemindex = i;  // eventuell else mit Fehlermeldung
+		}
 #else
 		static_assert(false, " Fehlende Implementierung für SetListbox für dieses Framework");
 #endif
@@ -504,6 +558,12 @@ public:
 		return AnsiString(strText).c_str();
 #elif defined BUILD_WITH_QT
 		return field->currentItem()->text().toStdString();
+#elif defined BUILD_WITH_NUKLEAR
+		if (field->count() > 0 && field->itemindex < field->count())
+		{
+			return field->items[field->itemindex];
+		}
+		return "";
 #else
 		static_assert(false, " Fehlende Implementierung für SetListbox für dieses Framework");
 #endif
@@ -515,6 +575,8 @@ public:
 		if (field->Items->Count > 0) field->ItemIndex = 0;
 #elif defined BUILD_WITH_QT
 		if (field->count() > 0) field->setCurrentIndex(0);
+#elif defined BUILD_WITH_NUKLEAR
+		if (field->count() > 0) field->itemindex=0;
 #else
 		static_assert(false, " Fehlende Implementierung für SetFirstListbox für dieses Framework");
 #endif
@@ -547,6 +609,8 @@ public:
 		chosen = std::make_optional(box->IsChecked);
 #elif defined BUILD_WITH_QT
 		chosen = std::make_optional(box->checkState() == Qt::Checked); // partially possible, attention
+#elif defined BUILD_WITH_NUKLEAR
+		chosen = std::make_optional(box->checkstate==1);
 #else
 		static_assert(false, " todo, define for new framework");
 #endif
@@ -599,6 +663,9 @@ public:
 			list.append(txt);
 			});
 		field->addItems(list);
+#elif defined BUILD_WITH_NUKLEAR
+		field->items.clear();
+		std::for_each(values.cbegin(), values.cend(), [field](std::string const& value) { field->items.emplace_back(value.c_str()); });
 #else
 		static_assert(false, " Fehlende Implementierung für InitListBox für dieses Framework");
 #endif
@@ -614,6 +681,9 @@ public:
 #elif defined BUILD_WITH_QT
 		auto clear_items = [this, &field]() { field->clear(); };
 		auto set_index = [&field](int iVal) { field->setCurrentIndex(iVal); };
+#elif defined BUILD_WITH_NUKLEAR
+		auto clear_items = [this, &field]() { field->items.clear(); };
+		auto set_index = [this, &field](int iVal) { field->itemindex = iVal;  };
 #else
 		static_assert(false, "need implementation of clear_items and set_index");
 #endif
@@ -654,6 +724,10 @@ public:
 		auto get_index = [&field]() { return field->currentIndex(); };
 		auto get_text = [&field]() { return field->currentText(); };
 		static constexpr auto convert_text = [](fw_String const& val) -> std::string { return val.toStdString(); };
+#elif defined BUILD_WITH_NUKLEAR
+		auto get_index = [this, &field]() { return field->itemindex;  };
+		auto get_text = [this, &field]() { return field->text; };
+		static constexpr auto convert_text = [](fw_String const& val) { return val; };
 #else
 		static_assert(false, "need implementation of get_index and get_text");
 #endif
@@ -747,6 +821,8 @@ public:
 		auto GetFunc = [](auto* field, size_t index) { return field->Items->Strings[index]; };
 #elif defined BUILD_WITH_QT
 		auto GetFunc = [](auto* field, size_t index) { return field->item(index)->text(); };
+#elif defined BUILD_WITH_NUKLEAR
+		auto GetFunc = [](auto* field, size_t index) { return field->items[index]; };
 #else
 		static_assert(false, " Fehlende Implementierung für Count_in_list für dieses Framework");
 #endif
@@ -774,6 +850,14 @@ public:
 		auto del_func1 = [](auto* field, size_t index) { field->removeItem(index); };
 		auto del_func2 = [](auto* field, size_t index) { delete field->takeItem(index); };
 		auto set_index = [](auto* field, size_t index) { field->setCurrentIndex(index); };
+#elif defined BUILD_WITH_NUKLEAR
+		auto get_index = [](auto* field) { return field->itemindex;  };
+		auto del_func1 = [](auto* field, size_t index) { 
+			if( index<field.items.count() && field.items.count()>0)
+				field->items.erase(field->items.begin() + index); 
+		};
+		auto del_func2 = del_func1;
+		auto set_index = [](auto* field, size_t index) { field->itemindex = index;  };
 #else
 		static_assert(false, " Fehlende Implementierung für Count_in_list für dieses Framework");
 #endif
@@ -797,6 +881,8 @@ public:
 #if defined BUILD_WITH_VCL || defined BUILD_WITH_FMX
 		auto CountFunc = [](auto* field) { return field->Items->Count; };
 #elif defined BUILD_WITH_QT
+		auto CountFunc = [](auto* field) { return field->count(); };
+#elif defined BUILD_WITH_NUKLEAR
 		auto CountFunc = [](auto* field) { return field->count(); };
 #else
 		static_assert(false, " Fehlende Implementierung für Count_in_list für dieses Framework");
@@ -837,6 +923,13 @@ public:
 			{ 3,                     EMyRetResults::no },
 			{ QDialog::Rejected,     EMyRetResults::cancel }
 		};
+#elif defined BUILD_WITH_NUKLEAR
+		//doesn't apply
+		auto call = [](fw_Form* form) { return true; };
+		static const std::map<int, EMyRetResults> RetVals = {
+			{true, EMyRetResults::ok },
+			{false, EMyRetResults::cancel }
+		};
 #else
 		static_assert(false, " fehlende Implementierung für ShowModal()");
 #endif
@@ -867,6 +960,8 @@ private:
 		auto *comp = Form()->FindComponent(strField.c_str());
 #elif defined BUILD_WITH_QT
 		auto* comp = Form()->findChild<QObject* >(QString::fromStdString(strField));
+#elif defined BUILD_WITH_NUKLEAR
+		auto* comp = Form()->FindComponent(strField);
 #else
 		static_assert(false, " keine Umsetzung von Find für dieses Framework");
 		void* comp = nullptr;
@@ -890,13 +985,17 @@ private:
 		return field;
 	}
 
+	
 
 	// -----------------------------------------------------------------------
 	template <typename ty>
 	void SetFunction(std::function<void(fw_String const& val)> func, ty const& value, int iLen = -1, int iScale = -1) {
-#if defined BUILD_WITH_VCL || defined BUILD_WITH_FMX
+#if defined BUILD_WITH_VCL || defined BUILD_WITH_FMX || defined BUILD_WITH_NUKLEAR
 		auto convert_string = [](std::string const& strValue) { return fw_String(strValue.c_str());  };
-		auto convert_wstring = [](std::wstring const& strValue) { return fw_String(strValue.c_str()); };
+		auto convert_wstring = [](std::wstring const& strValue) { 
+			std::string str(strValue.begin(),strValue.end());
+			return str;
+		};
 #elif defined BUILD_WITH_QT
 		auto convert_string = [](std::string const& strValue) { return QString::fromStdString(strValue); };
 		auto convert_wstring = [](std::wstring const& strValue) { return QString::fromStdWString(strValue); };
@@ -976,6 +1075,8 @@ private:
 #elif defined BUILD_WITH_QT
 		if constexpr (std::is_same<std::wstring, ty>::value)                   return value.toStdWString();
 		else if constexpr (is_qt_string<ty>::value)                            return value;
+#elif defined BUILD_WITH_NUKLEAR
+		if constexpr (std::is_same<std::string, ty>::value)                     return value;
 #else
 		static_assert(false, " fehlende Implementierung for GetText in diesem Framwork");
 #endif
@@ -984,6 +1085,8 @@ private:
 		 std::string strValue = AnsiString(value).c_str();
 #elif defined BUILD_WITH_QT
 		 std::string strValue = value.toStdString();
+#elif defined BUILD_WITH_NUKLEAR
+		 std::string strValue = value;
 #else
 		 static_assert(false, " fehlende Implementierung for GetText in diesem Framwork");
 #endif
@@ -1024,6 +1127,23 @@ private:
 		auto set_to = [&field](fw_String const& strSeek) {
 			field->setCurrentText(strSeek);
 		};
+#elif defined BUILD_WITH_NUKLEAR
+		auto get_index = [this, &field]() { return field->itemindex;  };
+		auto set_index = [this, &field](int val) { return field->itemindex = val;  };
+		auto set_to = [this, &field](fw_String const& strSeek) {
+			field->itemindex = -1;
+			for (int i = 0; i < field->count(); ++i) {
+				if (strSeek == field->items[i]) {
+					field->itemindex = i;
+					break;
+				}
+			}
+			if (field->itemindex == -1) {
+				std::stringstream os;
+				os << "Element \"" << strSeek.c_str() << "\" not found!";
+				throw std::runtime_error(os.str().c_str());
+			}
+		};
 #else
 		static_assert(false, " Fehlende Implementierung für interne SetCombobox Funktion in diesem Framework");
 #endif
@@ -1046,6 +1166,8 @@ private:
 				}
 				else if constexpr (is_cpp_wide_string<used_type>::value)     set_to(QString::fromStdWString(*value));
 				else if constexpr (is_wchar_or_char_param<used_type>::value) set_to(QString(*value));
+#elif defined BUILD_WITH_NUKLEAR
+				if constexpr (is_cpp_string<used_type>::value)          set_to(value->c_str());
 #endif
 				else if constexpr (is_number_param<used_type>::value) {
 					int iVal = static_cast<int>(*value);
@@ -1082,6 +1204,8 @@ private:
 			}
 			else if constexpr (is_cpp_wide_string<ty>::value)     set_to(QString::fromStdWString(value));
 			else if constexpr (is_wchar_or_char_param<ty>::value) set_to(QString(value));
+#elif defined BUILD_WITH_NUKLEAR
+			if constexpr (is_cpp_string<ty>::value)              set_to(value.c_str());
 #endif
 			else if constexpr (is_number_param<ty>::value) {
 				int iVal = static_cast<int>(value);
