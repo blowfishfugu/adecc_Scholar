@@ -34,6 +34,42 @@ $HeadURL: $
 
 using namespace std::literals::string_literals;
 
+class TMyGuard {
+   private:
+      std::string strMessage;
+      bool boActive = false;
+   public:
+      TMyGuard(void) = delete;
+      TMyGuard(TMyGuard const&) = delete;
+      TMyGuard(TMyGuard&&) = delete;
+      
+      TMyGuard(std::string const& msg) : strMessage(msg) { }
+      virtual ~TMyGuard() { }
+
+      void               Active() { boActive = true; }
+
+      std::string const& Message() const { return strMessage; }
+      bool               IsActive() const { return boActive; }
+};
+
+class TMyToggle : TMyGuard {
+   private:
+      bool &boRunning;
+   public:
+      TMyToggle(void) = delete;
+      TMyToggle(TMyToggle const&) = delete;
+      TMyToggle(TMyToggle&&) = delete;
+      TMyToggle(std::string const& msg, bool& boRef) : TMyGuard(msg), boRunning(boRef) { 
+         if(boRunning) throw std::runtime_error(Message() + ", value is true");
+         Active();
+         }
+      ~TMyToggle() {
+         if(IsActive()) boRunning = false;
+         }
+   };
+
+
+
 /** \class
 \brief Tool- Klasse mit Hilfsfunktionen für std::string
 \details Tool- Klasse mit Hilfsfunktionen zum Bearbeiten von std::string. Neben

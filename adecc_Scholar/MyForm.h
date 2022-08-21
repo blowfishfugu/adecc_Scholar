@@ -53,13 +53,15 @@ private:
 							 { EMyAlignmentType::center,  Qt::AlignVCenter | Qt::AlignCenter },
 							 { EMyAlignmentType::unknown, Qt::AlignVCenter | Qt::AlignLeft }
 	};
-#else
+#elif defined BUILD_WITH_NUKLEAR
 	static const inline std::map<EMyAlignmentType, nk_text_alignment> align_type_conv = {
 							 { EMyAlignmentType::left,    NK_TEXT_LEFT },
 							 { EMyAlignmentType::right,   NK_TEXT_RIGHT },
 							 { EMyAlignmentType::center,  NK_TEXT_CENTERED },
 							 { EMyAlignmentType::unknown, NK_TEXT_LEFT }
 	};
+#else
+	static_assert(false, "Missing map align_type_conv in current platform");
 #endif
 
 public:
