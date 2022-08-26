@@ -81,6 +81,7 @@ enum class EMyRetResults {
 
 /// Enumeration to specify a type for an element of the framework
 enum class EMyFrameworkType : int {
+	form = -1,     ///< container of drawable components, usually a window
 	edit = 0,      ///< single-line input field in the framework, value is 0
 	label = 1,     ///< single-line labeling field in the framework, value is 1
 	groupbox = 2,  ///< container for grouping other display and input fields, value is 2
