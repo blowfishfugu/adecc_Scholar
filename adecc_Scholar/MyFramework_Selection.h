@@ -132,16 +132,16 @@ struct Undefined {};
 
 
 using fw_Form = nk::NKForm; //nk_begin..subcontrols..nk_end
-using fw_Groupbox = nk::TGroupBox; //nk_group + nk_option_labels?
 using fw_Edit = nk::TEdit; //nk_edit_string /NK_EDIT_FIELD
 using fw_Label = nk::TLabel; //nk_label(_colored/_wrap), nk_text
-using fw_Memo = nk::TMemo; //nk_layout_row(height..) + nk_edit_string /NK_EDIT_BOX
-using fw_Combobox = nk::TCombobox; //nk_combo
+using fw_Groupbox = nk::TGroupBox; //nk_group + nk_option_labels?
+using fw_Button = nk::TButton; //nk_button(_label/symbol/symbol_label)
 using fw_Listbox = nk::TListbox; //nk_selectable_label + array_index
 using fw_Checkbox = nk::TCheckbox; //nk_checkbox_label
-using fw_Button = nk::TButton; //nk_button(_label/symbol/symbol_label)
-using fw_Table = nk::TGrid; //nk_layout_row_static(...,cols)
+using fw_Combobox = nk::TCombobox; //nk_combo
+using fw_Memo = nk::TMemo; //nk_layout_row(height..) + nk_edit_string /NK_EDIT_BOX
 using fw_Statusbar = nk::TStatusBar; //nk_begin(NO_TITLE, bounds=viewPort.width usw.) +nk_label
+using fw_Table = nk::TGrid; //nk_layout_row_static(...,cols)
 
 #else
 static_assert(false, "Ein Framework muss gewählt sein, um diese Bibliothek zu nutzen"
