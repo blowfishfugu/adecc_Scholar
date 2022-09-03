@@ -951,8 +951,10 @@ public:
 #elif defined BUILD_WITH_QT
 		if constexpr (std::is_same<fw_Table, fw>::value) return fld->rowCount();
 		else return fld->count();
+#elif defined BUILD_WITH_NUKLEAR
+		return fld->rowCount();
 #else
-#error Missing implementation for function TMyForm::get_row_cnt() for the chosen framework
+		static_assert(false, "Missing implementation for function TMyForm::get_row_cnt() for the chosen framework");
 #endif
 	}
 
@@ -972,6 +974,9 @@ public:
 #elif defined BUILD_WITH_QT
 		if constexpr (std::is_same<fw_Table, fw>::value) return fld->columnCount();
 		else return 1u; // prüfen, eventuell mehrere Spalten möglich
+#elif defined BUILD_WITH_NUKLEAR
+		if constexpr (std::is_same<fw_Table, fw>::value) return fld->colCount();
+		else return 1u;
 #else
 #error Missing implementation for function TMyForm::get_col_cnt() for the chosen framework
 #endif
@@ -1027,6 +1032,29 @@ public:
 			if (fld->currentIndex >= 0) selected_rows.push_back(static_cast<size_t>(fld->currentIndex));
 		}
 		else static_assert_no_match();
+#elif defined BUILD_WITH_NUKLEAR
+		if constexpr (std::is_same<fw_Table, fw>::value) {
+			for (int i=0;i<fld->selected.size();i++)
+			{
+				int isSelected = fld->selected[i];
+				if (isSelected)
+				{
+					selected_rows.push_back(i);
+				}
+			}
+		}
+		else if constexpr (std::is_same<fw_Listbox, fw>::value) {
+			if (fld->itemindex >= 0)
+			{
+				selected_rows.push_back(fld->itemindex);
+			}
+		}
+		else if constexpr (std::is_same<fw_Combobox, fw>::value) {
+			if (fld->itemindex >= 0)
+			{
+				selected_rows.push_back(fld->itemindex);
+			}
+		}
 #else
 #error Missing implementation for function TMyForm::get_selected_rows() for the chosen framework
 #endif
@@ -1074,6 +1102,19 @@ public:
 		if constexpr (std::is_same<fw_Table, fw>::value) return fld->item(iRow, iCol)->setText(text);
 		else if constexpr (std::is_same<fw_Listbox, fw>::value) return fld->item(iRow)->setText(text);
 		else return fld->setItemText(iRow, text);
+#elif defined BUILD_WITH_NUKLEAR
+		if constexpr (std::is_same<fw_Table, fw>::value)
+		{
+			return fld->Rows[iRow][iCol] = text;
+		}
+		else if constexpr (std::is_same<fw_Listbox, fw>::value)
+		{
+			return fld->items[iRow] = text;
+		}
+		else if constexpr (std::is_same<fw_Combobox, fw>::value)
+		{
+			fld->setText(text); //<- updates itemindex = selectedindex
+		}
 #else
 #error Missing implementation for function TMyForm::get_item_text() for the chosen framework
 #endif
@@ -1121,6 +1162,10 @@ public:
 		if constexpr (std::is_same<fw_Table, fw>::value) return fld->item(iRow, iCol)->text();
 		else if constexpr (std::is_same<fw_Listbox, fw>::value) return fld->item(iRow)->text();
 		else return fld->itemText(iRow);
+#elif defined BUILD_WITH_NUKLEAR
+		if constexpr (std::is_same<fw_Table, fw>::value) return fld->Rows[iRow][iCol];
+		else if constexpr (std::is_same<fw_Listbox, fw>::value) return fld->items[iRow];
+		else return fld->items[iRow];
 #else
 #error Missing implementation for function TMyForm::get_item_text() for the chosen framework
 #endif
@@ -1196,6 +1241,8 @@ public:
 #elif defined BUILD_WITH_QT
 		QItemSelectionModel* selectModel = field->selectionModel();
 		foreach(QModelIndex index, selectModel->selectedRows()) selected_rows.push_back(static_cast<size_t>(index.row());
+#elif defined BUILD_WITH_NUKLEAR
+		std::copy(field->selected.begin(), field->selected.end(), std::back_inserter(selected_rows));
 #else
 #error Fehlende Implementierung für GetSelectedTableRows in diesem Framework
 #endif
@@ -1231,6 +1278,11 @@ public:
 		auto get_row_cnt = [](auto fld) -> int { return fld->rowCount(); };
 		auto get_item = [](auto fld, int iRow, int iCol) { return fld->item(iRow, iCol)->text(); };
 		auto get_length = [](fw_String const& val) { return val.length(); };
+#elif defined BUILD_WITH_NUKLEAR
+		auto get_col_cnt = [](auto fld) -> int { return fld->colCount(); };
+		auto get_row_cnt = [](auto fld) -> int { return fld->rowCount(); };
+		auto get_item = [](auto fld, int iRow, int iCol) { return fld->Rows[iRow][iCol]; };
+		auto get_length = [](fw_String const& val) { return val.length(); };
 #else
 #error Fehlende Implementierung für GetTableValues in diesem Framework
 #endif
@@ -1240,7 +1292,7 @@ public:
 			std::ostringstream os;
 			os << "wrong paramter for row in GetTableValue for formular \"" << FormName()
 				<< "\" field \"" << strField << "\", row is " << iRow << " (max is " << get_row_cnt(field) - 1
-				<< ")."
+				<< ").";
 				throw std::runtime_error(os.str());
 		}
 
@@ -1248,7 +1300,7 @@ public:
 			std::ostringstream os;
 			os << "wrong paramter for col in GetTableValue for formular \"" << FormName()
 				<< "\" field \"" << strField << "\", col is " << iRow << " (max is " << get_col_cnt(field) - 1
-				<< ")."
+				<< ").";
 				throw std::runtime_error(os.str());
 		}
 
@@ -1550,6 +1602,8 @@ private:
 				}
 				else if constexpr (is_cpp_wide_string<used_type>::value)     set_to(QString::fromStdWString(*value));
 				else if constexpr (is_wchar_or_char_param<used_type>::value) set_to(QString(*value));
+#elif defined BUILD_WITH_NUKLEAR
+				if constexpr (is_cpp_string<ty>::value)              set_to(value.c_str());
 #endif
 				else if constexpr (is_number_param<used_type>::value) {
 					int iVal = static_cast<int>(*value);
@@ -1586,6 +1640,8 @@ private:
 			}
 			else if constexpr (is_cpp_wide_string<ty>::value)     set_to(QString::fromStdWString(value));
 			else if constexpr (is_wchar_or_char_param<ty>::value) set_to(QString(value));
+#elif defined BUILD_WITH_NUKLEAR
+			if constexpr (is_cpp_string<ty>::value)              set_to(value.c_str());
 #endif
 			else if constexpr (is_number_param<ty>::value) {
 				int iVal = static_cast<int>(value);
