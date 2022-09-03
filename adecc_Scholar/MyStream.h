@@ -5,6 +5,7 @@
 #include "MyStdTypes.h"
 #include "MyFramework_Selection.h"
 
+
 #if defined BUILD_WITH_VCL
 #include <Vcl.Forms.hpp>
 #include <Vcl.StdCtrls.hpp>
@@ -352,7 +353,7 @@ class ListBoxStreamBuf : public StreamBufBase<ty> {
 private:
 	TListBox* value;
 public:
-	ListBoxStreamBuf(TListBox* para, bool boClean = true) : StreamBufBase<ty>() {
+	ListBoxStreamBuf(TListBox* para, bool boMultiSelect = false, bool boClean = true) : StreamBufBase<ty>() {
 		value = para;
 		if (boClean) value->Items->Clear();
 	}
@@ -374,8 +375,10 @@ class ListBoxStreamBuf : public StreamBufBase<ty> {
 private:
 	QListWidget* value;
 public:
-	ListBoxStreamBuf(QListWidget* para, bool boClean = true) : StreamBufBase<ty>() {
+	ListBoxStreamBuf(QListWidget* para, bool boMultiSelect = false, bool boClean = true) : StreamBufBase<ty>() {
 		value = para;
+		if (boMultiSelect) value->setSelectionMode(QAbstractItemView::ExtendedSelection);
+		else value->setSelectionMode(QAbstractItemView::SingleSelection);
 		if (boClean) value->clear();
 	}
 
@@ -417,7 +420,6 @@ public:
 		}
 	}
 };
-
 #else
 static_assert(false, "unbekanntes Framework, ListBoxStreamBuf");
 #endif
@@ -521,6 +523,7 @@ public:
 		item = nullptr;
 		value->ViewStyle = vsReport;
 		value->RowSelect = true;
+		value->MultiSelect = true;
 		boNewItem = true;
 		if (boClean) {
 			value->Items->Clear();
@@ -653,7 +656,7 @@ public:
 		tw->verticalHeader()->setVisible(false);
 		tw->setEditTriggers(QAbstractItemView::NoEditTriggers);
 		tw->setSelectionBehavior(QAbstractItemView::SelectRows);
-		tw->setSelectionMode(QAbstractItemView::SingleSelection);
+		tw->setSelectionMode(QAbstractItemView::ExtendedSelection); // SingleSelection
 		tw->setShowGrid(false);
 
 		if (boClean) {

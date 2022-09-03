@@ -35,38 +35,38 @@ $HeadURL: $
 using namespace std::literals::string_literals;
 
 class TMyGuard {
-   private:
-      std::string strMessage;
-      bool boActive = false;
-   public:
-      TMyGuard(void) = delete;
-      TMyGuard(TMyGuard const&) = delete;
-      TMyGuard(TMyGuard&&) = delete;
-      
-      TMyGuard(std::string const& msg) : strMessage(msg) { }
-      virtual ~TMyGuard() { }
+private:
+	std::string strMessage;
+	bool boActive = false;
+public:
+	TMyGuard(void) = delete;
+	TMyGuard(TMyGuard const&) = delete;
+	TMyGuard(TMyGuard&&) = delete;
 
-      void               Active() { boActive = true; }
+	TMyGuard(std::string const& msg) : strMessage(msg) { }
+	virtual ~TMyGuard() { }
 
-      std::string const& Message() const { return strMessage; }
-      bool               IsActive() const { return boActive; }
+	void               Active() { boActive = true; }
+
+	std::string const& Message() const { return strMessage; }
+	bool               IsActive() const { return boActive; }
 };
 
 class TMyToggle : TMyGuard {
-   private:
-      bool &boRunning;
-   public:
-      TMyToggle(void) = delete;
-      TMyToggle(TMyToggle const&) = delete;
-      TMyToggle(TMyToggle&&) = delete;
-      TMyToggle(std::string const& msg, bool& boRef) : TMyGuard(msg), boRunning(boRef) { 
-         if(boRunning) throw std::runtime_error(Message() + ", value is true");
-         Active();
-         }
-      ~TMyToggle() {
-         if(IsActive()) boRunning = false;
-         }
-   };
+private:
+	bool &boRunning;
+public:
+	TMyToggle(void) = delete;
+	TMyToggle(TMyToggle const&) = delete;
+	TMyToggle(TMyToggle&&) = delete;
+	TMyToggle(std::string const& msg, bool& boRef) : TMyGuard(msg), boRunning(boRef) {
+		if (boRunning) throw std::runtime_error(Message() + ", value is true");
+		Active();
+	}
+	~TMyToggle() {
+		if (IsActive()) boRunning = false;
+	}
+};
 
 
 
@@ -80,49 +80,49 @@ class TMyToggle : TMyGuard {
 \since   Version 1.0
 */
 class TMyTools {
-     template<typename ty>
-     struct dependent_false : std::false_type {};
-   public:
-      //------------------------------------------------------------------------
-      /** \name Methoden zum Trimmen von std::string
-         \{
-      */
+	template<typename ty>
+	struct dependent_false : std::false_type {};
+public:
+	//------------------------------------------------------------------------
+	/** \name Methoden zum Trimmen von std::string
+	   \{
+	*/
 
-      //------------------------------------------------------------------------
-      static std::string trim_left(std::string && strVal, std::string const& strDelimiter = " ") {
-         strVal.erase(0, strVal.find_first_not_of(strDelimiter));
-         return strVal;
-         }
+	//------------------------------------------------------------------------
+	static std::string trim_left(std::string && strVal, std::string const& strDelimiter = " ") {
+		strVal.erase(0, strVal.find_first_not_of(strDelimiter));
+		return strVal;
+	}
 
-      //------------------------------------------------------------------------
-      static std::string trim_right(std::string && strVal, std::string const& strDelimiter = " ") {
-         strVal.erase(strVal.find_last_not_of(strDelimiter), strVal.length());
-         return strVal;
-         }
+	//------------------------------------------------------------------------
+	static std::string trim_right(std::string && strVal, std::string const& strDelimiter = " ") {
+		strVal.erase(strVal.find_last_not_of(strDelimiter), strVal.length());
+		return strVal;
+	}
 
-      //------------------------------------------------------------------------
-      static std::string trim(std::string && strVal, std::string const& strDelimiter = " ") {
-         strVal.erase(0, strVal.find_first_not_of(strDelimiter));
-         strVal.erase(strVal.find_last_not_of(strDelimiter) + 1, strVal.length());
-         return strVal;
-         }
+	//------------------------------------------------------------------------
+	static std::string trim(std::string && strVal, std::string const& strDelimiter = " ") {
+		strVal.erase(0, strVal.find_first_not_of(strDelimiter));
+		strVal.erase(strVal.find_last_not_of(strDelimiter) + 1, strVal.length());
+		return strVal;
+	}
 
-      static std::string trim_left(std::string const& strText, std::string const& strDelimiter = " ") {
-         std::string strVal(strText);
-		 return trim_left(std::forward<std::string>(strVal));
-         }
+	static std::string trim_left(std::string const& strText, std::string const& strDelimiter = " ") {
+		std::string strVal(strText);
+		return trim_left(std::forward<std::string>(strVal));
+	}
 
-      //------------------------------------------------------------------------
-      static std::string trim_right(std::string const& strText, std::string const& strDelimiter = " ") {
-         std::string strVal(strText);
-         return trim_right(std::forward<std::string>(strVal));
-         }
+	//------------------------------------------------------------------------
+	static std::string trim_right(std::string const& strText, std::string const& strDelimiter = " ") {
+		std::string strVal(strText);
+		return trim_right(std::forward<std::string>(strVal));
+	}
 
-      //------------------------------------------------------------------------
-      static std::string trim(std::string const& strText, std::string const& strDelimiter = " ") {
-         std::string strVal(strText);
-         return trim(std::forward<std::string>(strVal));
-         }
+	//------------------------------------------------------------------------
+	static std::string trim(std::string const& strText, std::string const& strDelimiter = " ") {
+		std::string strVal(strText);
+		return trim(std::forward<std::string>(strVal));
+	}
 
 	/// \}
 

@@ -6,6 +6,8 @@
 #include <string>
 #include <tuple>
 #include <chrono>
+#include <thread>
+#include <atomic>
 
 template <typename char_type>
 struct myTupleHlp {
@@ -47,17 +49,17 @@ public:
 	TMyTimer() = default;
 	TMyTimer(TMyTimer const&) = delete;
 
-       template <typename func_type, typename... arguments>
-       void add_task(unsigned int interval, func_type func, arguments&&... args) {
-          std::function<typename std::result_of<func_type(arguments...)>::type()> localtask(std::bind(std::forward<func_type>(func), std::forward<arguments>(args)...));
-          //std::function<void ()> task(std::bind(std::forward<func_type>(func), std::forward<arguments>(args)...));
-          std::thread([this, interval, localtask]() {
-             while(this->boActive == true) {
-                std::this_thread::sleep_for(std::chrono::milliseconds(interval));
-                if(this->boActive) localtask();
-                }
-             }).detach();
-          }
+	template <typename func_type, typename... arguments>
+	void add_task(unsigned int interval, func_type func, arguments&&... args) {
+		std::function<typename std::result_of<func_type(arguments...)>::type()> localtask(std::bind(std::forward<func_type>(func), std::forward<arguments>(args)...));
+		//std::function<void ()> task(std::bind(std::forward<func_type>(func), std::forward<arguments>(args)...));
+		std::thread([this, interval, localtask]() {
+			while (this->boActive == true) {
+				std::this_thread::sleep_for(std::chrono::milliseconds(interval));
+				if (this->boActive) localtask();
+			}
+			}).detach();
+	}
 
 	void start() { boActive = true; }
 	void stop() { boActive = false; }
@@ -73,5 +75,6 @@ inline auto Call(tty& time, fty function, Args... args) {
 	time = std::chrono::duration_cast<tty>(func_ende - func_start);
 	return ret;
 }
+
 
 #endif

@@ -21,7 +21,6 @@
 
 #include "MyWait.h"
 
-
 class TMyForm {
 	friend void swap(TMyForm& lhs, TMyForm& rhs) {
 		std::swap(lhs.form, rhs.form);
@@ -329,6 +328,8 @@ public:
 			auto SetFunc = [this, strField](fw_String const& val) { this->Find<fw_Edit>(strField)->setText(val); };
 #elif defined BUILD_WITH_NUKLEAR
 			auto SetFunc = [this, strField](fw_String const& val) { this->Find<fw_Edit>(strField)->text=val; };
+#else 
+			static_assert(false, "missing SetFunc on fieldtype 'edit'");
 #endif
 			SetFunction(SetFunc, value, iLen, iScale);
 		}
@@ -342,6 +343,8 @@ public:
 			auto SetFunc = [this, strField](fw_String const& val) { this->Find<fw_Memo>(strField)->setText(val); };
 #elif defined BUILD_WITH_NUKLEAR
 			auto SetFunc = [this, strField](fw_String const& val) { this->Find<fw_Memo>(strField)->setText(val); };
+#else
+			static_assert(false, "missing SetFunc on fieldtype 'memo'");
 #endif
 			SetFunction(SetFunc, value, iLen, iScale);
 		}
@@ -357,6 +360,8 @@ public:
 			auto SetFunc = [this, strField](fw_String const& val) { this->Find<fw_Label>(strField)->setText(val); };
 #elif defined BUILD_WITH_NUKLEAR
 			auto SetFunc = [this, strField](fw_String const& val) { this->Find<fw_Label>(strField)->text=val; };
+#else
+			static_assert(false, "missing SetFunc on fieldtype 'label'");
 #endif
 			SetFunction(SetFunc, value, iLen, iScale);
 		}
@@ -372,6 +377,8 @@ public:
 			auto SetFunc = [this, strField](fw_String const& val) { this->Find<fw_Groupbox>(strField)->setTitle(val); };
 #elif defined BUILD_WITH_NUKLEAR
 			auto SetFunc = [this, strField](fw_String const& val) { this->Find<fw_Groupbox>(strField)->title=val; };
+#else
+			static_assert(false, "missing SetFunc on fieldtype 'groupbox'");
 #endif
 			SetFunction(SetFunc, value);
 		}
@@ -405,10 +412,12 @@ public:
 			auto SetBool = [this, strField](bool val) { this->Find<fw_Checkbox>(strField)->IsChecked = val; };
 #elif defined BUILD_WITH_QT
 			auto SetFunc = [this, strField](fw_String const& val) { this->Find<fw_Checkbox>(strField)->setText(val); };
-			auto SetBool = [this, strField](fw_String const& val) { this->Find<fw_Checkbox>(strField)->setText(val); };
+			auto SetBool = [this, strField](bool val) { this->Find<fw_Checkbox>(strField)->setCheckState(val ? Qt::Checked : Qt::Unchecked); };
 #elif defined BUILD_WITH_NUKLEAR
 			auto SetFunc = [this, strField](fw_String const& val) { this->Find<fw_Checkbox>(strField)->text=val; };
 			auto SetBool = [this, strField](bool val) { this->Find<fw_Checkbox>(strField)->checkstate=val; };
+#else
+			static_assert(false, "missing SetFunc/SetBool on fieldtype 'checkbox'");
 #endif
 			if constexpr (is_bool_param<ty>::value)         SetBool(value);
 			else if constexpr (is_number_param<ty>::value)  SetBool(value != 0);
@@ -426,6 +435,8 @@ public:
 			auto SetFunc = [this, strField](fw_String const& val) { this->Find<fw_Button>(strField)->setText(val); };
 #elif defined BUILD_WITH_NUKLEAR
 			auto SetFunc = [this, strField](fw_String const& val) { this->Find<fw_Button>(strField)->text=val; };
+#else
+			static_assert(false, "missing SetFunc/SetBool on fieldtype 'checkbox'");
 #endif
 			SetFunction(SetFunc, value);
 		}
@@ -439,12 +450,12 @@ public:
 		auto SetFunc = [this, strField](fw_String const& val) { this->Find<fw_Statusbar>(strField)->text = val; };
 		SetFunction(SetFunc, value);
 		}
-#endif
-
+#else
 		else if constexpr (ft == EMyFrameworkType::statusbar) return;
+#endif
 		else if constexpr (ft == EMyFrameworkType::listview) return;
 
-		else                                                 static_assert_no_match();
+		else { static_assert_no_match(); }
 	}
 
 	//------------------------------------------------------------------------------------------------------------------------
@@ -614,7 +625,7 @@ public:
 #elif defined BUILD_WITH_NUKLEAR
 		chosen = std::make_optional(box->checkstate==1);
 #else
-		static_assert(false, " todo, define for new framework");
+		static_assert(false, " missing GetCheckBox, define for new framework");
 #endif
 
 		if constexpr (is_optional<ty>::value) {
@@ -651,29 +662,7 @@ public:
 	}
 
 	// -----------------------------------------------------------------------
-	void InitCombobox(std::string const& strField, std::vector<std::string> const& values) {
-		auto field = Find<fw_Combobox>(strField);
-#if defined BUILD_WITH_VCL || defined BUILD_WITH_FMX
-		field->Items->Clear();
-		std::for_each(values.cbegin(), values.cend(), [field](std::string const& value) { field->Items->Add(value.c_str()); });
-#elif defined BUILD_WITH_QT
-		field->clear();
-		QStringList list;
-		std::for_each(values.cbegin(), values.cend(), [&list](std::string const& value) {
-			QString txt = QString::fromStdString(value);
-			txt.remove(QChar::Null);
-			list.append(txt);
-			});
-		field->addItems(list);
-#elif defined BUILD_WITH_NUKLEAR
-		field->items.clear();
-		std::for_each(values.cbegin(), values.cend(), [field](std::string const& value) { field->items.emplace_back(value.c_str()); });
-#else
-		static_assert(false, " Fehlende Implementierung für InitListBox für dieses Framework");
-#endif
-	}
-
-
+	
 	void InitCombobox(std::string const& strField, vecRepVals const& values) {
 		auto field = Find<fw_Combobox>(strField);
 
@@ -817,6 +806,8 @@ public:
 
 
 	//-----
+
+	//deleted in adecc?
 	template <EMyFrameworkType ft, typename ty>
 	ty Get_Value_in_list(std::string const& strField, size_t index) {
 #if defined BUILD_WITH_VCL || defined BUILD_WITH_FMX
@@ -861,10 +852,11 @@ public:
 		auto del_func2 = del_func1;
 		auto set_index = [](auto* field, size_t index) { field->itemindex = index;  };
 #else
-		static_assert(false, " Fehlende Implementierung für Count_in_list für dieses Framework");
+		static_assert(false, "Missing implementation for function TMyForm::Delete_Value_in_list() for the chosen framework");
 #endif
 		// Ablauf fehlt, aktuellen Index und Count prüfen 
-		size_t ret;
+		size_t ret = 0u;
+
 		if constexpr (ft == EMyFrameworkType::combobox) {
 			auto field = Find<fw_Combobox>(strField);
 			del_func1(field, index);
@@ -902,7 +894,6 @@ public:
 		return ret;
 	}
 
-
 	//------------------------------------------------------------------------
 	EMyRetResults ShowModal(void) {
 #if defined BUILD_WITH_VCL || defined BUILD_WITH_FMX
@@ -916,7 +907,7 @@ public:
 #elif defined BUILD_WITH_QT
 		auto call = [](fw_Form* form) {
 			QDialog* dlg = dynamic_cast<QDialog*>(form);
-			if (dlg == nullptr) throw std::runtime_error("keine Umwandlung für QDialog möglich");
+			if (dlg == nullptr) throw std::runtime_error("no cast to QDialog possible");
 			return dlg->exec();
 		};
 		static const std::map<int, EMyRetResults> RetVals = {
@@ -933,7 +924,7 @@ public:
 			{false, EMyRetResults::cancel }
 		};
 #else
-		static_assert(false, " fehlende Implementierung für ShowModal()");
+	static_assert(false, "Missing implementation for function TMyForm::ShowModal() for the chosen framework");
 #endif
 
 		if (auto myret = RetVals.find(call(Form())); myret != RetVals.end()) {
@@ -944,47 +935,251 @@ public:
 		}
 	}
 
-	// Erweiterungen für Tabellen
+	// Erweiterungen für Tabellen, schon vorbereitet für Listbox und Combobox
 	//------------------------------------------------------------------------------------------------------------------------
-	size_t GetTableRows(std::string const& stdField) {
+	template <typename fw>
+	size_t get_row_cnt(fw* fld) {
+		static_assert(std::is_same<fw_Table, fw>::value ||
+			std::is_same<fw_Listbox, fw>::value ||
+			std::is_same<fw_Combobox, fw>::value, "invalid type for get_row_cnt");
+		// negative Werte ?
 #if defined BUILD_WITH_VCL
-		auto get_row_cnt = [](auto fld) -> int { return fld->Items->Count; };
+		return fld->Items->Count;
 #elif defined BUILD_WITH_FMX
-		auto get_row_cnt = [](auto fld) -> int { return fld->RowCount; };
+		if constexpr (std::is_same<fw_Table, fw>::value) return fld->RowCount;
+		else return fld->Items->Count;
 #elif defined BUILD_WITH_QT
-		auto get_row_cnt = [](auto fld) -> int { return fld->rowCount(); };
+		if constexpr (std::is_same<fw_Table, fw>::value) return fld->rowCount();
+		else return fld->count();
 #else
-#error Fehlende Implementierung für GetTableRows in diesem Framework
+#error Missing implementation for function TMyForm::get_row_cnt() for the chosen framework
 #endif
-		auto field = Find<fw_Table>(strField);
-		auto iCnt = get_row_cnt(field);
-		if (iCnt < 0) throw std::runtime_error("value is negative for TableRows");
-		return static_cast<size_t>(iCnt);
 	}
+
+
+	template <typename fw>
+	size_t get_col_cnt(fw* fld) {
+		static_assert(std::is_same<fw_Table, fw>::value ||
+			std::is_same<fw_Listbox, fw>::value ||
+			std::is_same<fw_Combobox, fw>::value, "invalid type for get_col_cnt");
+
+#if defined BUILD_WITH_VCL
+		if constexpr (std::is_same<fw_Table, fw>::value) return fld->Columns->Count;
+		else return 1u;
+#elif defined BUILD_WITH_FMX
+		if constexpr (std::is_same<fw_Table, fw>::value) return fld->ColumnCount;
+		else return 1u;
+#elif defined BUILD_WITH_QT
+		if constexpr (std::is_same<fw_Table, fw>::value) return fld->columnCount();
+		else return 1u; // prüfen, eventuell mehrere Spalten möglich
+#else
+#error Missing implementation for function TMyForm::get_col_cnt() for the chosen framework
+#endif
+	}
+
+
+	template <typename fw>
+	std::vector<size_t> get_selected_rows(fw* fld) {
+		static_assert(std::is_same<fw_Table, fw>::value ||
+			std::is_same<fw_Listbox, fw>::value ||
+			std::is_same<fw_Combobox, fw>::value, "invalid type for get_selected_rows");
+
+		std::vector<size_t> selected_rows;
+#if defined BUILD_WITH_VCL
+		if constexpr (std::is_same<fw_Table, fw>::value) {
+			TItemStates selected = TItemStates() << isSelected;
+			for (TListItem* item = fld->Selected; item; item = fld->GetNextItem(item, sdAll, selected)) {
+				selected_rows.push_back(static_cast<size_t>(item->Index));
+			}
+		}
+		else if constexpr (std::is_same<fw_Listbox, fw>::value) {
+			for (size_t i = 0u; i < static_cast<size_t>(fld->Items->Count); ++i)
+				if (fld->Selected[i]) selected_rows.push_back(i);
+		}
+		else if constexpr (std::is_same<fw_Combobox, fw>::value) {
+			if (fld->ItemIndex >= 0) selected_rows.push_back(static_cast<size_t>(fld->ItemIndex));
+		}
+		else static_assert_no_match();
+#elif defined BUILD_WITH_FMX
+		// was ist, wenn keine Zeile gewählt, -1 ?   für FMX::TStringGrid kein Multiselect
+		if constexpr (std::is_same<fw_Table, fw>::value)
+			selected_rows.push_back(static_cast<size_t>(fld->Selected));
+		else if constexpr (std::is_same<fw_Listbox, fw>::value) {
+			for (size_t i = 0u; i < static_cast<size_t>(fld->Items->Count); ++i)
+				if (fld->ListItems[i]->IsSelected) selected_rows.push_back(i);
+		}
+		else if constexpr (std::is_same<fw_Combobox, fw>::value)
+			if (fld->ItemIndex >= 0) selected_rows.push_back(static_cast<size_t>(fld->ItemIndex));
+			else static_assert_no_match();
+
+#elif defined BUILD_WITH_QT
+		if constexpr (std::is_same<fw_Table, fw>::value) {
+			QItemSelectionModel* selectModel = fld->selectionModel();
+			foreach(QModelIndex index, selectModel->selectedRows())
+				selected_rows.push_back(static_cast<size_t>(index.row()));
+		}
+		else if constexpr (std::is_same<fw_Listbox, fw>::value) {
+			QItemSelectionModel* selectModel = fld->selectionModel();
+			foreach(QModelIndex index, selectModel->selectedRows())
+				selected_rows.push_back(static_cast<size_t>(index.row()));
+		}
+		else if constexpr (std::is_same<fw_Combobox, fw>::value) {
+			if (fld->currentIndex >= 0) selected_rows.push_back(static_cast<size_t>(fld->currentIndex));
+		}
+		else static_assert_no_match();
+#else
+#error Missing implementation for function TMyForm::get_selected_rows() for the chosen framework
+#endif
+		return selected_rows;
+	}
+
+
+
+	/// method to get the text of a specific cell or row
+	template <typename fw>
+	auto set_item_text(fw_String const &text, fw* fld, size_t iRow, size_t iCol = 0u) {
+		static_assert(std::is_same<fw_Table, fw>::value ||
+			std::is_same<fw_Listbox, fw>::value ||
+			std::is_same<fw_Combobox, fw>::value, "invalid type for set_item_text");
+
+		if (iRow > get_row_cnt(fld) - 1) {
+			std::ostringstream os;
+			os << "wrong value for parameter \"iRow\" in function set_item_text, "
+				<< "iRow = " << iRow
+				<< " (max is " << get_row_cnt(fld) - 1 << ")";
+			throw std::runtime_error(os.str());
+		}
+
+		if (iCol > get_col_cnt(fld) - 1) {
+			std::ostringstream os;
+			os << "wrong value for parameter \"iCol\" in function set_item_text, "
+				<< "iCol = " << iCol
+				<< " (max is " << get_col_cnt(fld) - 1 << ")";
+			throw std::runtime_error(os.str());
+		}
+
+
+#if defined BUILD_WITH_VCL
+		if constexpr (std::is_same<fw_Table, fw>::value) {
+			TListItem* item = fld->Items->Item[iRow];
+			if (iCol == 0) item->Caption = text;
+			else item->SubItems->Strings[iCol - 1] = text;
+		}
+		else return fld->Items->Strings[iRow] = text;
+
+#elif defined BUILD_WITH_FMX
+		if constexpr (std::is_same<fw_Table, fw>::value) fld->Cells[iCol][iRow] = text;
+		else fld->Items->Strings[iRow] = text;
+#elif defined BUILD_WITH_QT
+		if constexpr (std::is_same<fw_Table, fw>::value) return fld->item(iRow, iCol)->setText(text);
+		else if constexpr (std::is_same<fw_Listbox, fw>::value) return fld->item(iRow)->setText(text);
+		else return fld->setItemText(iRow, text);
+#else
+#error Missing implementation for function TMyForm::get_item_text() for the chosen framework
+#endif
+	}
+
+
+
+
+	/// method to get the text of a specific cell or row
+	template <typename fw>
+	auto get_item_text(fw* fld, size_t iRow, size_t iCol = 0u) {
+		static_assert(std::is_same<fw_Table, fw>::value ||
+			std::is_same<fw_Listbox, fw>::value ||
+			std::is_same<fw_Combobox, fw>::value, "invalid type for get_item_text");
+
+		if (iRow > get_row_cnt(fld) - 1) {
+			std::ostringstream os;
+			os << "wrong value for parameter \"iRow\" in function get_item_text, "
+				<< "iRow = " << iRow
+				<< " (max is " << get_row_cnt(fld) - 1 << ")";
+			throw std::runtime_error(os.str());
+		}
+
+		if (iCol > get_col_cnt(fld) - 1) {
+			std::ostringstream os;
+			os << "wrong value for parameter \"iCol\" in function get_item_text, "
+				<< "iCol = " << iCol
+				<< " (max is " << get_col_cnt(fld) - 1 << ")";
+			throw std::runtime_error(os.str());
+		}
+
+
+#if defined BUILD_WITH_VCL
+		if constexpr (std::is_same<fw_Table, fw>::value) {
+			TListItem* item = fld->Items->Item[iRow];
+			if (iCol == 0) return item->Caption;
+			else return item->SubItems->Strings[iCol - 1];
+		}
+		else return fld->Items->Strings[iRow];
+
+#elif defined BUILD_WITH_FMX
+		if constexpr (std::is_same<fw_Table, fw>::value) return fld->Cells[iCol][iRow];
+		else return fld->Items->Strings[iRow];
+#elif defined BUILD_WITH_QT
+		if constexpr (std::is_same<fw_Table, fw>::value) return fld->item(iRow, iCol)->text();
+		else if constexpr (std::is_same<fw_Listbox, fw>::value) return fld->item(iRow)->text();
+		else return fld->itemText(iRow);
+#else
+#error Missing implementation for function TMyForm::get_item_text() for the chosen framework
+#endif
+	}
+
+	size_t get_text_length(fw_String const& text) {
+#if defined BUILD_WITH_VCL || defined BUILD_WITH_FMX
+		return text.Length();
+#elif defined BUILD_WITH_QT
+		return text.length();
+#elif defined BUILD_WITH_NUKLEAR
+		return text.length();
+#else
+#error Missing implementation for function TMyForm::get_text_length() for the chosen framework
+#endif
+	}
+
+	template <EMyFrameworkType ft>
+	size_t GetRowsCount(std::string const& strField) {
+		if constexpr (ft == EMyFrameworkType::listview)
+			return get_row_cnt(Find<fw_Table>(strField));
+		else if constexpr (ft == EMyFrameworkType::listbox)
+			return get_row_cnt(Find<fw_Listbox>(strField));
+		else if constexpr (ft == EMyFrameworkType::combobox)
+			return get_row_cnt(Find<fw_Combobox>(strField));
+		else static_assert_no_match();
+	}
+
+
 	// ---  
-	size_t GetTableColumns(std::string const& stdField) {
-#if defined BUILD_WITH_VCL
-		auto get_col_cnt = [](auto fld) -> int { return fld->Columns->Count; };
-#elif defined BUILD_WITH_FMX
-		auto get_col_cnt = [](auto fld) -> int { return fld->ColumnCount; };
-#elif defined BUILD_WITH_QT
-		auto get_col_cnt = [](auto fld) -> int { return fld->columnCount(); };
-#else
-#error Fehlende Implementierung für GetTableColumns in diesem Framework
-#endif
-		auto field = Find<fw_Table>(strField);
-		auto iCnt = get_col_cnt(field);
-		if (iCnt < 0) throw std::runtime_error("value is negative for TableCols");
-		return static_cast<size_t>(iCnt);
+	template <EMyFrameworkType ft>
+	size_t GetColumnsCount(std::string const& strField) {
+		if constexpr (ft == EMyFrameworkType::listview)
+			return get_col_cnt(Find<fw_Table>(strField));
+		else if constexpr (ft == EMyFrameworkType::listbox)
+			return get_col_cnt(Find<fw_Listbox>(strField));
+		else if constexpr (ft == EMyFrameworkType::combobox)
+			return get_col_cnt(Find<fw_Combobox>(strField));
+		else static_assert_no_match();
 	}
 
-	// ---
+	// ---                              
+	template <EMyFrameworkType ft>
+	std::vector<size_t> GetAllRows(std::string const& strField) {
+		size_t cnt;
+		if constexpr (ft == EMyFrameworkType::listview)
+			cnt = get_row_cnt(Find<fw_Table>(strField));
+		else if constexpr (ft == EMyFrameworkType::listbox)
+			cnt = get_row_cnt(Find<fw_Listbox>(strField));
+		else if constexpr (ft == EMyFrameworkType::combobox)
+			cnt = get_row_cnt(Find<fw_Combobox>(strField));
+		else static_assert_no_match();
 
-	std::vector<size_t> GetAllTableRows(std::string const& strField) {
-		std::vector<size_t> rows(GetTableRows(strField));
+		std::vector<size_t> rows(cnt);
+
 		std::generate(rows.begin(), rows.end(), [i = 0]() mutable { return i++; });
 		return rows;
 	}
+
 
 	std::vector<size_t> GetSelectedTableRows(std::string const& strField) {
 		std::vector<size_t> selected_rows;
@@ -1064,14 +1259,75 @@ public:
 		}
 	};
 
+
+	// ---
+	template <EMyFrameworkType ft>
+	std::vector<size_t> GetSelectedRows(std::string const& strField) {
+		if constexpr (ft == EMyFrameworkType::listview)
+			return get_selected_rows(Find<fw_Table>(strField));
+		else if constexpr (ft == EMyFrameworkType::listbox)
+			return get_selected_rows(Find<fw_Listbox>(strField));
+		else if constexpr (ft == EMyFrameworkType::combobox)
+			return get_selected_rows(Find<fw_Combobox>(strField));
+		else static_assert_no_match();
+	}
+
+
+	// ---	
+	template <EMyFrameworkType ft, typename ty>
+	void SetValue(std::string const& strField, size_t iRow, size_t iCol, ty const& value, int iLen = -1, int iScale = -1) {
+		try {
+			if constexpr (ft == EMyFrameworkType::listview)
+				set_item_text(SetText<ty>(value, iLen, iScale), Find<fw_Table>(strField), iRow, iCol);
+			else if constexpr (ft == EMyFrameworkType::listbox)
+				set_item_text(SetText<ty>(value, iLen, iScale), Find<fw_Listbox>(strField), iRow, iCol);
+			else if constexpr (ft == EMyFrameworkType::combobox)
+				set_item_text(SetText<ty>(value, iLen, iScale), Find<fw_Combobox>(strField), iRow, iCol);
+			else static_assert_no_match();
+		}
+		catch (std::exception& ex) {
+			std::ostringstream os;
+			os << "error in formular \"" << FormName() << "\" field \"" << strField << "\"" << std::endl
+				<< ex.what();
+			throw std::runtime_error(os.str());
+		}
+	}
+
+
+	// 
+	template <EMyFrameworkType ft, typename ty>
+	std::optional<ty> GetValue(std::string const& strField, size_t iRow, size_t iCol = 0u) {
+		try {
+			fw_String item;
+			if constexpr (ft == EMyFrameworkType::listview)
+				item = get_item_text(Find<fw_Table>(strField), iRow, iCol);
+			else if constexpr (ft == EMyFrameworkType::listbox)
+				item = get_item_text(Find<fw_Listbox>(strField), iRow, iCol);
+			else if constexpr (ft == EMyFrameworkType::combobox)
+				item = get_item_text(Find<fw_Combobox>(strField), iRow, iCol);
+			else static_assert_no_match();
+
+			if (get_text_length(item) == 0) return std::nullopt;
+			else return std::make_optional(GetText<ty>(item));
+		}
+		catch (std::exception& ex) {
+			std::ostringstream os;
+			os << "error in formular \"" << FormName() << "\" field \"" << strField << "\"" << std::endl
+				<< ex.what();
+			throw std::runtime_error(os.str());
+		}
+	}
+
+
+
 private:
 	fw_Form* Form(void) {
-		if (form == nullptr) throw std::runtime_error("Critical error, member form in TMyForm is nullptr");
+		if (form == nullptr) throw std::runtime_error("Critical error, member form in this instance of TMyForm is a nullptr");
 		return form;
 	}
 
 	fw_Form const* Form(void) const {
-		if (form == nullptr) throw std::runtime_error("Critical error, member form in TMyForm is nullptr");
+		if (form == nullptr) throw std::runtime_error("Critical error, member form in this instance of TMyForm is a nullptr");
 		return form;
 	}
 
@@ -1107,41 +1363,49 @@ private:
 		return field;
 	}
 
-	
 
 	// -----------------------------------------------------------------------
 	template <typename ty>
 	void SetFunction(std::function<void(fw_String const& val)> func, ty const& value, int iLen = -1, int iScale = -1) {
-#if defined BUILD_WITH_VCL || defined BUILD_WITH_FMX || defined BUILD_WITH_NUKLEAR
+		func(SetText<ty>(value, iLen, iScale));
+		return;
+	}
+
+
+	template <typename ty>
+	fw_String SetText(ty const& value, int iLen = -1, int iScale = -1) {
+		fw_String retVal("");
+#if defined BUILD_WITH_VCL || defined BUILD_WITH_FMX
 		auto convert_string = [](std::string const& strValue) { return fw_String(strValue.c_str());  };
-		auto convert_wstring = [](std::wstring const& strValue) { 
-			std::string str(strValue.begin(),strValue.end());
-			return str;
-		};
+		auto convert_wstring = [](std::wstring const& strValue) { return fw_String(strValue.c_str()); };
 #elif defined BUILD_WITH_QT
 		auto convert_string = [](std::string const& strValue) { return QString::fromStdString(strValue); };
 		auto convert_wstring = [](std::wstring const& strValue) { return QString::fromStdWString(strValue); };
+#elif defined BUILD_WITH_NUKLEAR
+		auto convert_string = [](std::string const& strValue) { return fw_String(strValue.c_str());  };
+		auto convert_wstring = [](std::wstring const& strValue) {
+			std::string str(strValue.begin(), strValue.end());
+			return str;
+		};
 #else
-		static_assert(false, " keine Definition von SetFunction im gewählten Framework");
+#error Missing implementation for function TMyForm::SetFunction() for the chosen framework
 #endif
+
 		if constexpr (is_optional<ty>::value) {
 			using used_type = typename std::remove_reference<typename std::remove_cv<decltype(*value)>::type>::type;
-			if (!value.has_value())  func("");
+			if (!value.has_value())  retVal = "";
 			else {
-				if constexpr (is_cpp_narrow_string<used_type>::value)   func(convert_string(*value));
-				if constexpr (is_cpp_wide_string<used_type>::value)     func(convert_wstring(*value));
-#if defined BUILD_WITH_VCL || defined BUILD_WITH_FMX
-				else if constexpr (is_delphi_string<used_type>::value)       func(*value);
-#elif defined BUILD_WITH_QT
-				else if constexpr (is_qt_string<used_type>::value)           func(*value);
-#endif
-				else if constexpr (is_wchar_param<used_type>::value)         func(*value);
-				else if constexpr (is_char_param<used_type>::value)          func(*value);
+				if constexpr (is_cpp_narrow_string<used_type>::value)          retVal = convert_string(*value);
+				else if constexpr (is_cpp_wide_string<used_type>::value)       retVal = convert_wstring(*value);
+				else if constexpr (is_delphi_string<used_type>::value)         retVal = *value;
+				else if constexpr (is_qt_string<used_type>::value)             retVal = *value;
+				else if constexpr (is_wchar_param<used_type>::value)           retVal = *value;
+				else if constexpr (is_char_param<used_type>::value)            retVal = *value;
 				else if constexpr (std::is_integral<used_type>::value && !std::is_same<used_type, bool>::value) {
-					func(convert_string(TMyTools::integral_to_string_fmt<used_type>(*value)));
+					retVal = convert_string(TMyTools::integral_to_string_fmt<used_type>(*value));
 				}
 				else if constexpr (std::is_floating_point<used_type>::value) {
-					func(convert_string(TMyTools::double_to_string_fmt(*value, iScale)));
+					retVal = convert_string(TMyTools::double_to_string_fmt(*value, iScale));
 				}
 				else {
 					std::ostringstream os;
@@ -1152,27 +1416,23 @@ private:
 						os << std::setprecision(iScale);
 					}
 					os << *value;
-					func(convert_string(os.str()));
+					retVal = convert_string(os.str());
 				}
 			}
 		}
 		else {
-			//using used_type = typename std::remove_all_extents<typename std::remove_const<typename std::remove_reference<typename std::remove_cv<ty>::type>::type>::type>::type;
 			using used_type = ty;
-			if constexpr (is_cpp_narrow_string<ty>::value)                   func(convert_string(value));
-			if constexpr (is_cpp_wide_string<ty>::value)                     func(convert_wstring(value));
-#if defined BUILD_WITH_VCL || defined BUILD_WITH_FMX
-			else if constexpr (is_delphi_string<used_type>::value)                func(value);
-#elif defined BUILD_WITH_QT
-			else if constexpr (is_qt_string<used_type>::value)                    func(value);
-#endif
-			else if constexpr (is_wchar_param<used_type>::value)                  func(value);
-			else if constexpr (is_char_param<used_type>::value)                   func(value);
+			if constexpr (is_cpp_narrow_string<used_type>::value)                 retVal = convert_string(value);
+			else if constexpr (is_cpp_wide_string<used_type>::value)              retVal = convert_wstring(value);
+			else if constexpr (is_delphi_string<used_type>::value)                retVal = value;
+			else if constexpr (is_qt_string<used_type>::value)                    retVal = value;
+			else if constexpr (is_wchar_param<used_type>::value)                  retVal = value;
+			else if constexpr (is_char_param<used_type>::value)                   retVal = value;
 			else if constexpr (std::is_integral<used_type>::value && !std::is_same<used_type, bool>::value) {
-				func(convert_string(TMyTools::integral_to_string_fmt<ty>(value)));
+				retVal = convert_string(TMyTools::integral_to_string_fmt<ty>(value));
 			}
 			else if constexpr (std::is_floating_point<used_type>::value) {
-				func(convert_string(TMyTools::double_to_string_fmt(value, iScale)));
+				retVal = convert_string(TMyTools::double_to_string_fmt(value, iScale));
 			}
 			else {
 				std::ostringstream os;
@@ -1183,11 +1443,13 @@ private:
 					os << std::setprecision(iScale);
 				}
 				os << value;
-				func(convert_string(os.str()));
+				retVal = convert_string(os.str());
 			}
 		}
-		return;
+		return retVal;
 	}
+
+
 
 	template <typename ty>
 	ty GetText(fw_String const& value) {
@@ -1200,7 +1462,7 @@ private:
 #elif defined BUILD_WITH_NUKLEAR
 		if constexpr (std::is_same<std::string, ty>::value)                     return value;
 #else
-		static_assert(false, " fehlende Implementierung for GetText in diesem Framwork");
+#error fehlende Implementierung for GetText in diesem Framwork
 #endif
 		 else {
 #if defined BUILD_WITH_VCL || defined BUILD_WITH_FMX
@@ -1288,8 +1550,6 @@ private:
 				}
 				else if constexpr (is_cpp_wide_string<used_type>::value)     set_to(QString::fromStdWString(*value));
 				else if constexpr (is_wchar_or_char_param<used_type>::value) set_to(QString(*value));
-#elif defined BUILD_WITH_NUKLEAR
-				if constexpr (is_cpp_string<used_type>::value)          set_to(value->c_str());
 #endif
 				else if constexpr (is_number_param<used_type>::value) {
 					int iVal = static_cast<int>(*value);
@@ -1326,8 +1586,6 @@ private:
 			}
 			else if constexpr (is_cpp_wide_string<ty>::value)     set_to(QString::fromStdWString(value));
 			else if constexpr (is_wchar_or_char_param<ty>::value) set_to(QString(value));
-#elif defined BUILD_WITH_NUKLEAR
-			if constexpr (is_cpp_string<ty>::value)              set_to(value.c_str());
 #endif
 			else if constexpr (is_number_param<ty>::value) {
 				int iVal = static_cast<int>(value);
