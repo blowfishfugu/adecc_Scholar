@@ -327,7 +327,7 @@ public:
 #elif defined BUILD_WITH_QT
 			auto SetFunc = [this, strField](fw_String const& val) { this->Find<fw_Edit>(strField)->setText(val); };
 #elif defined BUILD_WITH_NUKLEAR
-			auto SetFunc = [this, strField](fw_String const& val) { this->Find<fw_Edit>(strField)->text=val; };
+			auto SetFunc = [this, strField](fw_String const& val) { this->Find<fw_Edit>(strField)->setText(val); };
 #else 
 			static_assert(false, "missing SetFunc on fieldtype 'edit'");
 #endif
