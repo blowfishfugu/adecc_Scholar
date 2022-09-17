@@ -227,10 +227,10 @@ public:
 
 	virtual void Write(void) {
 		if (StreamBufBase<ty>::os.str().length() > 0) {
-			value->data.emplace_back(StreamBufBase<ty>::os.str().c_str());
+			value->data.append(StreamBufBase<ty>::os.str().c_str());
 		}
 		else {
-			value->data.emplace_back(ty::strEmpty);
+			value->data.append(ty::strEmpty);
 		}
 	}
 };
