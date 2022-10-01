@@ -81,6 +81,10 @@ enum class EMyRetResults {
 
 /// Enumeration to specify a type for an element of the framework
 enum class EMyFrameworkType : int {
+	space_layout_child=-5, ///< spacing in a space_layout
+	space_layout=-4, ///< layoutcontainer for spacer positioning
+	static_row=-3,  ///< layout in units, absolute, non-resizing
+	dynamic_row=-2, ///< layout in percentages, resizing
 	form = -1,     ///< container of drawable components, usually a window
 	edit = 0,      ///< single-line input field in the framework, value is 0
 	label = 1,     ///< single-line labeling field in the framework, value is 1
