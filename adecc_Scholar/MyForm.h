@@ -524,7 +524,7 @@ public:
 #elif defined BUILD_WITH_QT
 		if (field->count() > 0) field->setCurrentRow(0);
 #elif defined BUILD_WITH_NUKLEAR
-		if (field->count() > 0) field->itemindex = 0;
+		if (field->count() > 0) field->selectIndex(0);
 #else
 		static_assert(false, " Fehlende Implementierung für SetFirstListbox für dieses Framework");
 #endif
@@ -554,11 +554,12 @@ public:
 		//value finden, index zurückgeben?
 		if (field->count() > 0) {
 			fw_String strSeek = boCaseSensitive ? value.c_str() : TMyTools::lower(value).c_str();
+			field->selectIndex(-1);
 			int i = 0;
 			for (; i < field->count(); ++i) {
 				if (strSeek == (boCaseSensitive ? field->items[i] : TMyTools::lower(field->items[i]))) break;
 			}
-			if (i < field->count()) field->itemindex = i;  // eventuell else mit Fehlermeldung
+			if (i < field->count()) field->selected[i]=1;  // eventuell else mit Fehlermeldung
 		}
 #else
 		static_assert(false, " Fehlende Implementierung für SetListbox für dieses Framework");
@@ -573,11 +574,7 @@ public:
 #elif defined BUILD_WITH_QT
 		return field->currentItem()->text().toStdString();
 #elif defined BUILD_WITH_NUKLEAR
-		if (field->count() > 0 && field->itemindex < field->count())
-		{
-			return field->items[field->itemindex];
-		}
-		return "";
+		return field->firstSelectedValue();
 #else
 		static_assert(false, " Fehlende Implementierung für SetListbox für dieses Framework");
 #endif
