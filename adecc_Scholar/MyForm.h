@@ -53,12 +53,7 @@ private:
 							 { EMyAlignmentType::unknown, Qt::AlignVCenter | Qt::AlignLeft }
 	};
 #elif defined BUILD_WITH_NUKLEAR
-	static const inline std::map<EMyAlignmentType, nk_text_alignment> align_type_conv = {
-							 { EMyAlignmentType::left,    NK_TEXT_LEFT },
-							 { EMyAlignmentType::right,   NK_TEXT_RIGHT },
-							 { EMyAlignmentType::center,  NK_TEXT_CENTERED },
-							 { EMyAlignmentType::unknown, NK_TEXT_LEFT }
-	};
+	
 #else
 	static_assert(false, "Missing map align_type_conv in current platform");
 #endif
@@ -222,6 +217,12 @@ public:
 #elif defined BUILD_WITH_QT
 		auto set = [this](auto fld, Qt::Alignment align_val) { fld->setAlignment(align_val); };
 #elif defined BUILD_WITH_NUKLEAR
+		static const std::map<EMyAlignmentType, nk_text_alignment> align_type_conv = {
+							 { EMyAlignmentType::left,    NK_TEXT_LEFT },
+							 { EMyAlignmentType::right,   NK_TEXT_RIGHT },
+							 { EMyAlignmentType::center,  NK_TEXT_CENTERED },
+							 { EMyAlignmentType::unknown, NK_TEXT_LEFT }
+	};
 		auto set = [this](auto fld, nk_text_alignment align_val) { fld->nk_alignment=align_val; };
 #else
 		static_assert(false, " fehlende Implementierung von Alignment() in diesem Framework");
