@@ -25,6 +25,8 @@
 #include <QListWidget>
 #include <QTableWidget>
 #include <QHeaderView>
+#elif defined BUILD_WITH_MFC
+#include "MFC/framework.h" //inkludiert CString, CDialog, CListView, CEdit, als auch windows.h usw..
 #else
   #error Für diese Bibliothek muss ein Framework definiert sein.
 #endif
