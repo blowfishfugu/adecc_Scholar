@@ -4,6 +4,8 @@
 #include <System.Classes.hpp>
 #elif defined BUILD_WITH_QT
 #include <QString>
+#elif defined BUILD_WITH_MFC
+#include <adecc_Scholar/MFC/framework.h>
 #endif
 
 #include <type_traits>
@@ -84,6 +86,9 @@ struct is_delphi_string {
 template<typename ty>
 struct is_qt_string : std::false_type {};
 
+template<typename ty>
+struct is_mfc_string : std::false_type {};
+
 #elif defined BUILD_WITH_QT
 
 template <typename ty>
@@ -95,6 +100,31 @@ struct is_qt_string {
 
 template <typename ty>
 struct is_delphi_narrow_string : std::false_type {} ;
+
+template <typename ty>
+struct is_delphi_wide_string : std::false_type {};
+
+template <typename ty>
+struct is_delphi_string : std::false_type {};
+
+template<typename ty>
+struct is_mfc_string : std::false_type {};
+
+#elif defined BUILD_WITH_MFC
+
+
+template <typename ty>
+struct is_mfc_string {
+    constexpr static bool value = std::is_same<CString, ty>::value ||
+        std::is_same<CString&, ty>::value ||
+        std::is_same<const CString&, ty>::value;
+};
+
+template<typename ty>
+struct is_qt_string : std::false_type {};
+
+template <typename ty>
+struct is_delphi_narrow_string : std::false_type {};
 
 template <typename ty>
 struct is_delphi_wide_string : std::false_type {};
@@ -115,7 +145,10 @@ struct is_delphi_string : std::false_type {};
 
 template<typename ty>
 struct is_qt_string : std::false_type {};
-	
+
+template<typename ty>
+struct is_mfc_string : std::false_type {};
+
 #endif
 
 

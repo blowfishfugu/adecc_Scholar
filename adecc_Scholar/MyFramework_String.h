@@ -14,6 +14,11 @@
 #elif defined BUILD_WITH_QT
    #include <QString>
    using fw_String = QString;
+#elif defined BUILD_WITH_MFC
+   #include <adecc_Scholar/MFC/framework.h>
+   using fw_String = CString;
+#else
+   #error Für diese Bibliothek muss ein Framework definiert sein.
 #endif
 
 
@@ -27,6 +32,9 @@ public:
       #elif defined BUILD_WITH_QT
          if constexpr (std::is_same<std::wstring, ty>::value)                   return value.toStdWString();
          else if constexpr (is_qt_string<ty>::value)                            return value;
+      #elif defined BUILD_WITH_MFC
+       if constexpr (std::is_same_v<std::wstring, ty>) return CStringW(value).GetString(); //macht intern multibytetowidechar
+       else if constexpr (is_mfc_string<ty>::value) return value;
       #else
          #error fehlende Implementierung for GetText in diesem Framwork
       #endif
@@ -35,6 +43,8 @@ public:
          std::string strValue = AnsiString(value).c_str();
       #elif defined BUILD_WITH_QT
          std::string strValue = value.toStdString();
+      #elif defined BUILD_WITH_MFC
+         std::string strValue{ value.GetString() };
       #else
          #error Missing implementation for function TMyForm::GetText() for the chosen framework
       #endif
@@ -59,6 +69,9 @@ public:
       #elif defined BUILD_WITH_QT
          auto convert_string = [](std::string const& strValue) { return QString::fromStdString(strValue); };
          auto convert_wstring = [](std::wstring const& strValue) { return QString::fromStdWString(strValue); };
+      #elif defined BUILD_WITH_MFC
+         auto convert_string = [](std::string const& strValue) { return CString(strValue.c_str()); };
+         auto convert_wstring = [](std::wstring const& strValue) { return CString(strValue.c_str()); };
       #else
          #error Missing implementation for function TMyForm::SetFunction() for the chosen framework
       #endif
@@ -71,6 +84,7 @@ public:
             else if constexpr (is_cpp_wide_string<used_type>::value)       retVal = convert_wstring(*value);
             else if constexpr (is_delphi_string<used_type>::value)         retVal = *value;
             else if constexpr (is_qt_string<used_type>::value)             retVal = *value;
+            else if constexpr (is_mfc_string<used_type>::value)            retVal = *value;
             else if constexpr (is_wchar_param<used_type>::value)           retVal = *value;
             else if constexpr (is_char_param<used_type>::value)            retVal = *value;
             else if constexpr (std::is_integral<used_type>::value && !std::is_same<used_type, bool>::value) {
@@ -98,6 +112,7 @@ public:
          else if constexpr (is_cpp_wide_string<used_type>::value)              retVal = convert_wstring(value);
          else if constexpr (is_delphi_string<used_type>::value)                retVal = value;
          else if constexpr (is_qt_string<used_type>::value)                    retVal = value;
+         else if constexpr (is_mfc_string<used_type>::value)                   retVal = value;
          else if constexpr (is_wchar_param<used_type>::value)                  retVal = value;
          else if constexpr (is_char_param<used_type>::value)                   retVal = value;
          else if constexpr (std::is_integral<used_type>::value && !std::is_same<used_type, bool>::value) {

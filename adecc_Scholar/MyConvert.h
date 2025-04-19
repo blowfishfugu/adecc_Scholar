@@ -9,6 +9,8 @@
 #include <System.Classes.hpp>
 #elif defined BUILD_WITH_QT
 #include <QString>
+#elif defined BUILD_WITH_MFC
+#include <adecc_Scholar/MFC/framework.h>
 #endif
 
 /*
