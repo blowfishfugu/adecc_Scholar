@@ -70,7 +70,8 @@ class TMyWait {
          if(currentWidget) currentWidget->unsetCursor();
          }
    };
-
+#elif defined BUILD_WITH_MFC
+using TMyWait = CWaitCursor; //intern: AfxGetApp()->BeginWaitCursor();..
 #else
   #error Missing implementation for class TMyWait for the chosen framework
 #endif
@@ -89,10 +90,11 @@ class TMyForm {
         { EMyFramework::vcl, "Embarcadero C++Builder, Visual Component Library" },
         { EMyFramework::fmx, "Embarcadero C++Builder, FireMonkey Library" },
         { EMyFramework::qt,  "Qt6" },
+        { EMyFramework::mfc,  "MFC" },
         { EMyFramework::unknown, "unbekanntes Framework" }
      };
 
-
+     //::edit/::label -Alignment
       #if defined BUILD_WITH_VCL
       static const inline std::map<EMyAlignmentType, TAlignment> align_type_conv = {
                                { EMyAlignmentType::left,  taLeftJustify },
@@ -113,6 +115,13 @@ class TMyForm {
                                { EMyAlignmentType::center,  Qt::AlignVCenter | Qt::AlignCenter },
                                { EMyAlignmentType::unknown, Qt::AlignVCenter | Qt::AlignLeft }
                                };
+      #elif defined BUILD_WITH_MFC
+     static const inline std::map<EMyAlignmentType, DWORD> align_type_conv = {
+                               { EMyAlignmentType::left,    ES_LEFT|SS_LEFT }, //constantnen sind "zufaellig" die gleichen
+                               { EMyAlignmentType::right,   ES_RIGHT|SS_RIGHT},
+                               { EMyAlignmentType::center,  ES_CENTER|SS_CENTER},
+                               { EMyAlignmentType::unknown, ES_LEFT|SS_LEFT }
+     };
       #else
          #error Missing definition of TMyForm::align_type_conv for the chosen framework
       #endif
@@ -152,6 +161,8 @@ class TMyForm {
             fw = EMyFramework::fmx;
          #elif defined BUILD_WITH_QT   
             fw = EMyFramework::qt;
+         #elif defined BUILD_WITH_MFC
+            fw = EMyFramework::mfc; //return "MFC" direkt?
          #else
             fw = EMyFramework::unknowm;
          #endif
@@ -384,6 +395,14 @@ class TMyForm {
            auto set = [this](auto fld, TTextAlign align_val) { fld->TextSettings->HorzAlign = align_val; };
          #elif defined BUILD_WITH_QT
            auto set =[this](auto fld, Qt::Alignment align_val) { fld->setAlignment(align_val); };
+         #elif defined BUILD_WITH_MFC
+          auto set = [this](auto fld, DWORD align_val) { 
+              // gibt Find garantiert was zurueck?
+              if (!fld) {
+                  return; //TODO: haltepunkt
+              }
+              fld->ModifyStyle(ES_LEFT | ES_CENTER | ES_RIGHT, align_val, 0); 
+              }
          #else
            #error Missing implementation for function TMyForm::Alignment() for the chosen framework
          #endif

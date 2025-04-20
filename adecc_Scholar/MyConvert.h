@@ -68,6 +68,14 @@ class TMyConvert {
       static void Convert(std::string const& source,  QString& target);
       static void Convert(QString const& source, std::wstring& target);
       static void Convert(QString const& source, std::string& target);
+
+      #elif defined BUILD_WITH_MFC
+#pragma (warning, "Not implemented")
+	  static void Convert(std::wstring const& source, CString& target);
+	  static void Convert(std::string const& source, CString& target);
+	  static void Convert(CString const& source, std::wstring& target);
+	  static void Convert(CString const& source, std::string& target);
+
 	  #endif
 
 

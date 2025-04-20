@@ -120,8 +120,55 @@
    using fw_Table     = QTableWidget;
    using fw_Statusbar = QStatusBar;
 
+#elif defined BUILD_WITH_MFC
+
+EMyFramework inline currentFramework = EMyFramework::mfc;
+
+struct is_delpi_compatible : std::false_type {};
+struct is_vcl_compile : std::false_type {};
+struct is_fmx_compile : std::false_type {};
+struct is_qt_compile : std::false_type {};
+struct is_mfc_compile : std::true_type {};
+
+
+using fw_Form = CDialogEx;
+using fw_Groupbox = CButton; //BS_GROUPBOX-Style
+using fw_Edit = CEdit;
+using fw_Memo = CEdit; //ES_MULTILINE-Style
+using fw_Label = CStatic;
+using fw_Combobox = CComboBox;
+using fw_Listbox = CListBox;
+using fw_Checkbox = CButton; //BS_CHECKBOX-Style
+using fw_Button = CButton;
+using fw_Table = CListCtrl; //LVS_REPORT-Style
+using fw_Statusbar = CStatusBar; //setpanetext
+
 #else
+
+//Kopiervorlage fuer frameworks
+//#include "framework_controls.h"
   EMyFramework inline currentFramework = EMyFramework::unknown;
+
+  struct is_delpi_compatible : std::false_type {};
+  struct is_vcl_compile : std::false_type {};
+  struct is_fmx_compile : std::false_type {};
+  struct is_qt_compile : std::false_type {};
+  struct is_mfc_compile : std::false_type {};
+
+  struct UndefinedControlType{};
+
+  using fw_Form = UndefinedControlType;
+  using fw_Groupbox = UndefinedControlType;
+  using fw_Edit = UndefinedControlType;
+  using fw_Memo = UndefinedControlType;
+  using fw_Label = UndefinedControlType;
+  using fw_Combobox = UndefinedControlType;
+  using fw_Listbox = UndefinedControlType;
+  using fw_Checkbox = UndefinedControlType;
+  using fw_Button = UndefinedControlType;
+  using fw_Table = UndefinedControlType;
+  using fw_Statusbar = UndefinedControlType;
+  //using fw_String = defined in MyFramework_String.h
   #error Ein Framework muss gewählt sein, um diese Bibliothek zu nutzen
 #endif
 

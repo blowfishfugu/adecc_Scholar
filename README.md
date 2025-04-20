@@ -8,6 +8,7 @@ To use the headeronly library from the semester break, one of the following cons
 - BUILD_WITH_VCL, C++Builder or RAD Studio 10.3 or higher with Windows application (VCL)
 - BUILD_WITH_FMX, C++Builder or RAD Studio 10.3 or higher with platform independent application (FMX)
 - BUILD_WITH_QT - for Visual Studio with Qt6 and with the Qt Creator
+- BUILD_WITH_MFC - for Visual Studio with MFC
 
 Questions and suggestions please via the Discord server for adecc Scholar
 
