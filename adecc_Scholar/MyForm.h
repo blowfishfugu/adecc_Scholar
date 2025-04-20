@@ -447,7 +447,22 @@ class TMyForm {
          else if constexpr (ft == EMyFrameworkType::combobox) Find<fw_Combobox>(strField)->setUpdatesEnabled(enabled);
          else if constexpr (ft == EMyFrameworkType::memo) Find<fw_Memo>(strField)->setUpdatesEnabled(enabled);
          else static_assert_no_match(); 
-         
+#elif defined BUILD_WITH_MFC
+          if (enabled) {
+              if constexpr (ft == EMyFrameworkType::listview) Find<fw_Table>(strField)->LockWindowUpdate();
+              else if constexpr (ft == EMyFrameworkType::listbox) Find<fw_Listbox>(strField)->LockWindowUpdate();
+              else if constexpr (ft == EMyFrameworkType::combobox) Find<fw_Combobox>(strField)->LockWindowUpdate();
+              else if constexpr (ft == EMyFrameworkType::memo) Find<fw_Memo>(strField)->LockWindowUpdate();
+              else static_assert_no_match();
+          }
+          else{
+              if constexpr (ft == EMyFrameworkType::listview) Find<fw_Table>(strField)->UnlockWindowUpdate();
+              else if constexpr (ft == EMyFrameworkType::listbox) Find<fw_Listbox>(strField)->UnlockWindowUpdate();
+              else if constexpr (ft == EMyFrameworkType::combobox) Find<fw_Combobox>(strField)->UnlockWindowUpdate();
+              else if constexpr (ft == EMyFrameworkType::memo) Find<fw_Memo>(strField)->UnlockWindowUpdate();
+              else static_assert_no_match();
+          }
+#endif
          #else
           #error Missing implementation for function TMyForm::EnableUpdates() for the chosen framework
          #endif
@@ -539,6 +554,8 @@ class TMyForm {
              auto SetFunc = [this, strField](fw_String const& val) { this->Find<fw_Edit>(strField)->Text = val; };
            #elif defined BUILD_WITH_QT
              auto SetFunc = [this, strField](fw_String const& val) { this->Find<fw_Edit>(strField)->setText(val); };
+           #elif defined BUILD_WITH_MFC
+            auto SetFunc = [this, strField](fw_String const& val) { this->Find<fw_Edit>(strField)->SetWindowText(val); }
            #endif
            SetFunction(SetFunc, value, iLen, iScale);
              }
@@ -550,6 +567,8 @@ class TMyForm {
              auto SetFunc = [this, strField](fw_String const& val) { this->Find<fw_Memo>(strField)->Text = val; };
            #elif defined BUILD_WITH_QT
              auto SetFunc = [this, strField](fw_String const& val) { this->Find<fw_Memo>(strField)->setText(val); };
+           #elif defined BUILD_WITH_MFC
+             auto SetFunc = [this, strField](fw_String const& val) { this->Find<fw_Edit>(strField)->SetWindowText(val); }
            #endif
            SetFunction(SetFunc, value, iLen, iScale);
              }
@@ -563,6 +582,8 @@ class TMyForm {
                 auto SetFunc = [this, strField](fw_String const& val) { this->Find<fw_Label>(strField)->Text = val; };
              #elif defined BUILD_WITH_QT
                auto SetFunc = [this, strField](fw_String const& val) { this->Find<fw_Label>(strField)->setText(val); };
+             #elif defined BUILD_WITH_MFC
+               auto SetFunc = [this, strField](fw_String const& val) { this->Find<fw_Edit>(strField)->SetWindowText(val); }
              #endif
            SetFunction(SetFunc, value, iLen, iScale);
              }
@@ -576,6 +597,8 @@ class TMyForm {
                 auto SetFunc = [this, strField](fw_String const& val) { this->Find<fw_Groupbox>(strField)->Text = val; };
              #elif defined BUILD_WITH_QT
                auto SetFunc = [this, strField](fw_String const& val) { this->Find<fw_Groupbox>(strField)->setTitle(val); };
+             #elif defined BUILD_WITH_MFC
+               auto SetFunc = [this, strField](fw_String const& val) { this->Find<fw_Edit>(strField)->SetWindowText(val); }
              #endif
            SetFunction(SetFunc, value);
              }
@@ -610,6 +633,9 @@ class TMyForm {
              #elif defined BUILD_WITH_QT
                 auto SetFunc = [this, strField](fw_String const& val) { this->Find<fw_Checkbox>(strField)->setText ( val ) ; };
                 auto SetBool = [this, strField](bool val) { this->Find<fw_Checkbox>(strField)->setCheckState( val ? Qt::Checked : Qt::Unchecked); };
+             #elif defined BUILD_WITH_MFC
+                auto SetFunc = [this, strField](fw_String const& val) { this->Find<fw_Checkbox>(strField)->SetWindowText(val); };
+                auto SetBool = [this, strField](bool val) { this->Find<fw_Checkbox>(strField)->SetCheck(val ? BST_CHECKED : BST_UNCHECKED); };
              #endif
              if constexpr (is_bool_param<ty>::value)         SetBool(value);
              else if constexpr (is_number_param<ty>::value)  SetBool(value != 0);
@@ -625,6 +651,8 @@ class TMyForm {
               auto SetFunc = [this, strField](fw_String const& val) { this->Find<fw_Button>(strField)->Text = val; };
            #elif defined BUILD_WITH_QT
               auto SetFunc = [this, strField](fw_String const& val) { this->Find<fw_Button>(strField)->setText(val); };
+           #elif defined BUILD_WITH_MFC
+              auto SetFunc = [this, strField](fw_String const& val) { this->Find<fw_Edit>(strField)->SetWindowText(val); }
            #endif
            SetFunction(SetFunc, value);
              }
@@ -635,8 +663,8 @@ class TMyForm {
              }
           #endif
 
-          else if constexpr (ft == EMyFrameworkType::statusbar) return;
-          else if constexpr (ft == EMyFrameworkType::listview) return;
+          else if constexpr (ft == EMyFrameworkType::statusbar) return; //<- set ueber GetAsStream
+          else if constexpr (ft == EMyFrameworkType::listview) return; //<- set ueber GetAsStream
 
         else                                                 static_assert_no_match();
       }
@@ -650,6 +678,9 @@ class TMyForm {
           #elif defined BUILD_WITH_QT
           auto get_len = [](auto fld) -> int { return fld->text().length(); };
           auto get_txt = [](auto fld) -> fw_String { return fld->text(); };
+          #elif defined BUILD_WITH_MFC
+          auto get_len = [](auto fld) -> int { return fld->GetWindowTextLength(); };
+          auto get_txt = [](auto fld) -> fw_String { fw_String txt; fld->GetWindowText(txt); return txt; };
           #else
             #error Missing implementation for function TMyForm::GetEdit() for the chosen framework
           #endif
