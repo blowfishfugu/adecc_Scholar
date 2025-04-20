@@ -85,7 +85,7 @@ class TMyForm {
      fw_Form*     form    = nullptr;
      bool         boOwner = false;
      mapRepositories cbsrep;
-
+     
      static std::map<EMyFramework, std::string> inline mpFrameworks = {
         { EMyFramework::vcl, "Embarcadero C++Builder, Visual Component Library" },
         { EMyFramework::fmx, "Embarcadero C++Builder, FireMonkey Library" },
@@ -162,7 +162,10 @@ class TMyForm {
          #elif defined BUILD_WITH_QT   
             fw = EMyFramework::qt;
          #elif defined BUILD_WITH_MFC
-            fw = EMyFramework::mfc; //return "MFC" direkt?
+            fw = EMyFramework::mfc; 
+            //direkt ausgeben?
+            //oder: if constexpr (is_mfc_compile::value) { return "MFC"; }
+            //oder: return mpFrameworks[currentFramework]
          #else
             fw = EMyFramework::unknowm;
          #endif
@@ -254,22 +257,46 @@ class TMyForm {
              case QMessageBox::Yes:
              case QMessageBox::Ok: return EMyRetResults::ok;
              case QMessageBox::No: return EMyRetResults::no;
-			 case QMessageBox::Cancel: return EMyRetResults::cancel;
+             case QMessageBox::Cancel: return EMyRetResults::cancel;
              default:
                 return EMyRetResults::unknown;
              }
+         #elif BUILD_WITH_MFC
+         UINT mbStyle = MB_OK;
+         switch (type) {
+             case(EMyMessageType::information): mbStyle = MB_OK | MB_ICONINFORMATION; break;
+             case(EMyMessageType::warning): mbStyle = MB_OK | MB_ICONWARNING; break;
+             case(EMyMessageType::error):mbStyle = MB_OK | MB_ICONERROR; break;
+             case(EMyMessageType::question): mbStyle = MB_YESNOCANCEL | MB_ICONQUESTION; break;
+             case(EMyMessageType::unknown): [[fallthrough]]
+             default:
+                 break;
+             }
+         //AfxMessageBox() hat nur Text, aber keine Caption, daher win32-MessageBox
+         int ret = MessageBox(Form()->GetSafeHwnd(), strMessage, strCaption, mbStyle);
+         switch (ret) {
+             case(IDOK): [[fallthrough]]
+             case(IDYES):
+                 return EMyRetResults::ok;
+             case(IDNO):
+                 return EMyRetResults::no;
+             case(IDCANCEL): 
+                 return EMyRetResults::cancel;
+             default: 
+                 return EMyRetResults::unknown;
+             }
          #endif
          }
-		 
-		 
-	  static void ProcessEvents(void) {
-		 #if defined BUILD_WITH_VCL || defined BUILD_WITH_FMX
-		 Application->ProcessMessages();
+         
+         
+      static void ProcessEvents(void) {
+         #if defined BUILD_WITH_VCL || defined BUILD_WITH_FMX
+         Application->ProcessMessages();
          #elif defined BUILD_WITH_QT
          QApplication::processEvents();	  
          #endif
-	     }
-		 
+         }
+         
       void Set(fw_Form* frm = nullptr, bool owner = false) {
          if(form != nullptr && boOwner == true) delete form;
          form    = frm;
@@ -281,6 +308,10 @@ class TMyForm {
             return AnsiString(Form()->Caption).c_str();
          #elif defined BUILD_WITH_QT
             return Form()->windowTitle().toStdString();
+         #elif defined BUILD_WITH_MFC
+            CString strCaption;
+            Form()->GetWindowText(strCaption);
+            return std::string{ strCaption.GetString() };
          #else
             #error Missing implementation for function TMyForm::GetCaption() for the chosen framework
          #endif
@@ -292,6 +323,8 @@ class TMyForm {
             auto SetFunc = [this](fw_String const& val) { this->Form()->Caption = val; };
          #elif defined BUILD_WITH_QT
             auto SetFunc = [this](fw_String const& val) { this->Form()->setWindowTitle(val); };
+         #elif defined BUILD_WITH_MFC
+          auto SetFunc = [this](fw_String const& val) { this->Form()->SetWindowText(val); };
          #else
             #error Missing implementation for function TMyForm::SetCaption() for the chosen framework
          #endif
@@ -304,47 +337,13 @@ class TMyForm {
            return AnsiString(Form()->Name).c_str();   ///< todo AnsiString eleminating
         #elif defined BUILD_WITH_QT
            return Form()->objectName().toStdString();
+        #elif defined BUILD_WITH_MFC
+           return Form()->GetRuntimeClass()->m_lpszClassName;
+           //CDialogEx hat keinen "Namen", waere templateID: IDD=IDD_AUSWERTUNGMFC_DIALOG;
         #else
           #error Missing implementation for funcion TMyForm::FormName() for the chosen framework
         #endif
        }
-
-      //------------------------------------------------------------------------
-      template<typename ty_base, EMyFrameworkType ft>
-      void GetAsStream(TStreamWrapper<ty_base>& wrapper, std::string const& strName) {
-         if constexpr(ft == EMyFrameworkType::memo || ft == EMyFrameworkType::listbox || ft == EMyFrameworkType::combobox)
-            wrapper.Activate(Find<typename MyFrameworkSelect<ft>::type>(strName));
-         else if constexpr (ft == EMyFrameworkType::statusbar)
-            #if defined BUILD_WITH_VCL
-            wrapper.Activate(Find<fw_Statusbar>(strName));
-            #elif defined BUILD_WITH_FMX || defined BUILD_WITH_QT
-            wrapper.Activate(Find<fw_Label>(strName));
-            #endif
-         // Aktivierung einer Liste nicht mehr möglich, da Überschriften benötigt werden
-         // Deshal neue Funktion
-         else
-            static_assert_no_supported();
-         }
-
-      template<typename ty_base, EMyFrameworkType ft>
-      auto* GetAsStreamBuff(std::string const& strName) {
-         if constexpr (ft == EMyFrameworkType::memo)          return new MemoStreamBuf<ty_base>(Find<fw_Memo>(strName));
-         else if constexpr (ft == EMyFrameworkType::listbox)  return new ListBoxStreamBuf<ty_base>(Find<fw_Listbox>(strName));
-         else if constexpr (ft == EMyFrameworkType::combobox) return new ComboBoxStreamBuf<ty_base>(Find<fw_Combobox>(strName));
-         else
-            static_assert_no_supported();
-      }
-
-
-      //------------------------------------------------------------------------
-      template<typename ty_base, EMyFrameworkType ft>
-      void GetAsStream(TStreamWrapper<ty_base>& wrapper, std::string const& strName, std::vector<tplList<ty_base>> const& caps, bool clear = true) {
-         if constexpr (ft == EMyFrameworkType::listview)
-            wrapper.Activate(Find<fw_Table>(strName), caps, clear);
-         else
-            static_assert_no_supported();
-         }
-
 
       //-----------------------------------------------------------------------
       //  Hier sind keine Probleme zu erwarten, da es nur C++ ist
@@ -427,34 +426,34 @@ class TMyForm {
 
       template <EMyFrameworkType ft>
       void EnableUpdates(std::string const& strField, bool enabled) {
-		 #if defined BUILD_WITH_VCL || defined BUILD_WITH_FMX
+         #if defined BUILD_WITH_VCL || defined BUILD_WITH_FMX
          if(enabled) {
-		    if constexpr (ft == EMyFrameworkType::listview) Find<fw_Table>(strField)->Items->EndUpdate();
+            if constexpr (ft == EMyFrameworkType::listview) Find<fw_Table>(strField)->Items->EndUpdate();
             else if constexpr (ft == EMyFrameworkType::listbox) Find<fw_Listbox>(strField)->Items->EndUpdate();
             else if constexpr (ft == EMyFrameworkType::combobox) Find<fw_Combobox>(strField)->Items->EndUpdate();
-		    else if constexpr (ft == EMyFrameworkType::memo) Find<fw_Memo>(strField)->Items->EndUpdate();
+            else if constexpr (ft == EMyFrameworkType::memo) Find<fw_Memo>(strField)->Items->EndUpdate();
             else static_assert_no_match(); 		 
-		    }
+            }
          else {
-		    if constexpr (ft == EMyFrameworkType::listview) Find<fw_Table>(strField)->Items->BeginUpdate();
+            if constexpr (ft == EMyFrameworkType::listview) Find<fw_Table>(strField)->Items->BeginUpdate();
             else if constexpr (ft == EMyFrameworkType::listbox) Find<fw_Listbox>(strField)->Items->BeginUpdate();
             else if constexpr (ft == EMyFrameworkType::combobox) Find<fw_Combobox>(strField)->Items->BeginUpdate();
-		    else if constexpr (ft == EMyFrameworkType::memo) Find<fw_Memo>(strField)->Items->BeginUpdate();
+            else if constexpr (ft == EMyFrameworkType::memo) Find<fw_Memo>(strField)->Items->BeginUpdate();
             else static_assert_no_match(); 		 	 
-		    }					 
+            }					 
          #elif defined BUILD_WITH_QT
-		 if constexpr (ft == EMyFrameworkType::listview) Find<fw_Table>(strField)->setUpdatesEnabled(enabled);
+         if constexpr (ft == EMyFrameworkType::listview) Find<fw_Table>(strField)->setUpdatesEnabled(enabled);
          else if constexpr (ft == EMyFrameworkType::listbox) Find<fw_Listbox>(strField)->setUpdatesEnabled(enabled);
          else if constexpr (ft == EMyFrameworkType::combobox) Find<fw_Combobox>(strField)->setUpdatesEnabled(enabled);
-		 else if constexpr (ft == EMyFrameworkType::memo) Find<fw_Memo>(strField)->setUpdatesEnabled(enabled);
+         else if constexpr (ft == EMyFrameworkType::memo) Find<fw_Memo>(strField)->setUpdatesEnabled(enabled);
          else static_assert_no_match(); 
-		 
+         
          #else
-		  #error Missing implementation for function TMyForm::EnableUpdates() for the chosen framework
+          #error Missing implementation for function TMyForm::EnableUpdates() for the chosen framework
          #endif
-	 
-	     }
-		  
+     
+         }
+          
 
       //----------------------------------------------------------------------------------------
       template <EMyFrameworkType ft>
@@ -465,10 +464,12 @@ class TMyForm {
            auto set = [this](auto fld, bool boSet) { fld->ReadOnly = boSet; };
          #elif defined BUILD_WITH_QT
            auto set =[this](auto fld, bool boSet) { fld->setReadOnly(boSet); };
+         #elif defined BUILD_WITH_MFC
+          auto set = [this](auto fld, bool boSet) { fld->EnableWindow(boSet ? TRUE : FALSE); };
+          //CEdit hätte ein SetReadOnly
          #else
            #error Missing implementation for function TMyForm::ReadOnly() for the chosen framework
          #endif
-
          if constexpr (ft == EMyFrameworkType::edit)          set(Find<fw_Edit>(strField), boSet);
          else if constexpr (ft == EMyFrameworkType::memo)     set(Find<fw_Memo>(strField), boSet);
          else if constexpr (ft == EMyFrameworkType::listbox)  set(Find<fw_Listbox>(strField), boSet);
@@ -483,6 +484,8 @@ class TMyForm {
            auto set = [this](auto fld, bool boSet) { fld->Visible = boSet; };
          #elif defined BUILD_WITH_QT
            auto set = [](auto fld, bool boSet) { fld->setVisible(boSet); };
+         #elif defined BUILD_WITH_MFC
+          auto set = [](auto fld, bool boSet) { fld->ShowWindow(boSet ? SW_SHOW : SW_HIDE); };
          #else
             #error Missing implementation for function TMyForm::Visible() for the chosen framework
          #endif
@@ -509,6 +512,8 @@ class TMyForm {
            auto set = [this](auto fld, bool boSet) { fld->Enabled = boSet; };
          #elif defined BUILD_WITH_QT
            auto set = [](auto fld, bool boSet) { fld->setEnabled(boSet); };
+         #elif defined BUILD_WITH_MFC
+          auto set = [this](auto fld, bool boSet) { fld->EnableWindow(boSet ? TRUE : FALSE); };
          #else
            #error Missing implementation for function TMyForm::Enable() for the chosen framework
          #endif
@@ -1100,8 +1105,8 @@ class TMyForm {
          #if defined BUILD_WITH_VCL
             if constexpr (std::is_same<fw_Table, fw>::value) return fld->Columns->Count;
             else return 1u;
-		   #elif defined BUILD_WITH_FMX
-		      if constexpr (std::is_same<fw_Table, fw>::value) return fld->ColumnCount;
+           #elif defined BUILD_WITH_FMX
+              if constexpr (std::is_same<fw_Table, fw>::value) return fld->ColumnCount;
             else return 1u;
          #elif defined BUILD_WITH_QT
             if constexpr (std::is_same<fw_Table, fw>::value) return fld->columnCount(); 
@@ -1226,21 +1231,21 @@ class TMyForm {
                        std::is_same<fw_Listbox, fw>::value ||
                        std::is_same<fw_Combobox, fw>::value, "invalid type for get_item_text");
 
-		   if(iRow > get_row_cnt(fld) - 1) {
-			   std::ostringstream os;
+           if(iRow > get_row_cnt(fld) - 1) {
+               std::ostringstream os;
             os << "wrong value for parameter \"iRow\" in function get_item_text, "
                << "iRow = " << iRow 
                << " (max is " << get_row_cnt(fld) - 1 << ")";
- 			   throw std::runtime_error(os.str());
-  	         }
+               throw std::runtime_error(os.str());
+             }
 
-		   if(iCol > get_col_cnt(fld) -1) {
-			   std::ostringstream os;
+           if(iCol > get_col_cnt(fld) -1) {
+               std::ostringstream os;
             os << "wrong value for parameter \"iCol\" in function get_item_text, "
                << "iCol = " << iCol 
                << " (max is " << get_col_cnt(fld) - 1 << ")";
-			   throw std::runtime_error(os.str());
-  	         }
+               throw std::runtime_error(os.str());
+             }
 
 
          #if defined BUILD_WITH_VCL
@@ -1295,7 +1300,7 @@ class TMyForm {
          else if constexpr (ft == EMyFrameworkType::combobox)
             return get_col_cnt(Find<fw_Combobox>(strField));
          else static_assert_no_match();
-		   }
+           }
 
 // ---                              
       template <EMyFrameworkType ft>
@@ -1310,7 +1315,7 @@ class TMyForm {
           else static_assert_no_match();
 
           std::vector<size_t> rows(cnt);
-	       std::generate(rows.begin(), rows.end(), [i = 0]() mutable { return i++; });
+           std::generate(rows.begin(), rows.end(), [i = 0]() mutable { return i++; });
           return rows;
           }
 
@@ -1326,7 +1331,7 @@ class TMyForm {
          else static_assert_no_match();
          }
 
-	  
+      
 // ---	
       template <EMyFrameworkType ft, typename ty>
       void SetValue(std::string const& strField, size_t iRow, size_t iCol, ty const& value, int iLen = -1, int iScale = -1) {
@@ -1350,9 +1355,9 @@ class TMyForm {
 
       // 
       template <EMyFrameworkType ft, typename ty>
-	   std::optional<ty> GetValue(std::string const& strField, size_t iRow, size_t iCol = 0u) {
+       std::optional<ty> GetValue(std::string const& strField, size_t iRow, size_t iCol = 0u) {
          try {
-	         fw_String item;
+             fw_String item;
             if constexpr (ft == EMyFrameworkType::listview || 
                           ft == EMyFrameworkType::listbox || 
                           ft == EMyFrameworkType::combobox)
@@ -1360,7 +1365,7 @@ class TMyForm {
             else static_assert_no_match();
 
             if(get_text_length(item) == 0) return std::nullopt;
-		      else return std::make_optional(TMy_FW_String::GetText<ty>(item));
+              else return std::make_optional(TMy_FW_String::GetText<ty>(item));
             }
          catch(std::exception& ex) {
             std::ostringstream os;
@@ -1368,7 +1373,7 @@ class TMyForm {
                << ex.what();
             throw std::runtime_error(os.str());
             }
-	      }
+          }
       
 
       template <EMyFrameworkType ft>
@@ -1564,7 +1569,7 @@ struct my_formlist_iterator {
 
    my_formlist_iterator& operator = (std::pair<TMyForm*, std::string> para) {
       form     = para.first;
-	  strField = para.second;
+      strField = para.second;
       start_pos = 0;
       col = 0u;
       return *this;
@@ -1602,7 +1607,7 @@ struct my_formlist_iterator {
          if(start_pos < form->GetRowsCount<ft>(strField)) start_pos++;
          else {
             form  = nullptr;
-			   strField = "";
+               strField = "";
             }
          }
       return *this;
@@ -1616,10 +1621,10 @@ struct my_formlist_iterator {
    
    friend bool operator==(const my_formlist_iterator& x, const my_formlist_iterator& y) {
      if (x.form == nullptr && y.form == nullptr) return true;
-	  if(x.form == nullptr || y.form == nullptr) return false;
-	  if(x.form == y.form) {
+      if(x.form == nullptr || y.form == nullptr) return false;
+      if(x.form == y.form) {
          return x.strField == y.strField;
-	     }
+         }
       else return false;
       }
 
@@ -1647,7 +1652,7 @@ struct my_formlist {
    size_t size(void) const {
       if(!form) return 0u;	   
       return form->GetRowsCount<ft>(strField); 
-	  }
+      }
 
 private:
    TMyForm *form;
@@ -1655,6 +1660,46 @@ private:
    std::string strField;
 };
 
+//------------------------------------------------------------------------
+template<typename ty_base, EMyFrameworkType ft>
+void GetAsStream(TStreamWrapper<ty_base>& wrapper, std::string const& strName) {
+    if constexpr (ft == EMyFrameworkType::memo || ft == EMyFrameworkType::listbox || ft == EMyFrameworkType::combobox)
+        wrapper.Activate(Find<typename MyFrameworkSelect<ft>::type>(strName));
+    else if constexpr (ft == EMyFrameworkType::statusbar)
+#if defined BUILD_WITH_VCL
+        wrapper.Activate(Find<fw_Statusbar>(strName));
+#elif defined BUILD_WITH_FMX || defined BUILD_WITH_QT
+        wrapper.Activate(Find<fw_Label>(strName));
+#elif defined BUILD_WITH_MFC
+        wrapper.Activate(Find<fw_Statusbar>(strName));
+#endif
+    // Aktivierung einer Liste nicht mehr möglich, da Überschriften benötigt werden
+    // Deshalb neue Funktion
+    else
+        static_assert_no_supported();
+}
+
+//GetAsStreamBuff nach unten-> benötigt durchdefinierte MyStream.h
+//----
+
+template<typename ty_base, EMyFrameworkType ft>
+auto* GetAsStreamBuff(std::string const& strName) {
+    if constexpr (ft == EMyFrameworkType::memo)          return new MemoStreamBuf<ty_base>(Find<fw_Memo>(strName));
+    else if constexpr (ft == EMyFrameworkType::listbox)  return new ListBoxStreamBuf<ty_base>(Find<fw_Listbox>(strName));
+    else if constexpr (ft == EMyFrameworkType::combobox) return new ComboBoxStreamBuf<ty_base>(Find<fw_Combobox>(strName));
+    else
+        static_assert_no_supported();
+}
+
+
+//------------------------------------------------------------------------
+template<typename ty_base, EMyFrameworkType ft>
+void GetAsStream(TStreamWrapper<ty_base>& wrapper, std::string const& strName, std::vector<tplList<ty_base>> const& caps, bool clear = true) {
+    if constexpr (ft == EMyFrameworkType::listview)
+        wrapper.Activate(Find<fw_Table>(strName), caps, clear);
+    else
+        static_assert_no_supported();
+}
 
 
 #endif
