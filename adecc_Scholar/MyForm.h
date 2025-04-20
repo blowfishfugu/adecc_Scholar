@@ -706,6 +706,11 @@ class TMyForm {
          #elif defined BUILD_WITH_QT
            field->clear();
            std::for_each(values.cbegin(), values.cend(), [field](std::string const& value) { field->addItem(QString::fromStdString(value)); });
+         #elif defined BUILD_WITH_MFC
+         while (field->GetCount() > 0) { //LBS_HASSTRINGS
+             field->DeleteString(field->GetCount() - 1);
+         }
+         std::for_each(values.cbegin(), values.cend(), [field](std::string const& value) { field->AddString(TMy_FW_String::SetText(value)); });
          #else
            #error Missing implementation for function TMyForm::InitListBox() for the chosen framework
          #endif
@@ -717,6 +722,8 @@ class TMyForm {
            field->Items->Add(value.c_str());
          #elif defined BUILD_WITH_QT
            field->addItem(QString::fromStdString(value));
+         #elif defined BUILD_WITH_MFC
+           field->AddString(TMy_FW_String::SetText(value));
          #else
            #error Missing implementation for function TMyForm::AddListBox() for the chosen framework
          #endif
@@ -728,6 +735,10 @@ class TMyForm {
            if (field->Items->Count > 0) field->ItemIndex = 0;
          #elif defined BUILD_WITH_QT
            if(field->count() > 0) field->setCurrentRow(0);
+         #elif defined BUILD_WITH_MFC
+         if (field->GetCount() > 0) {
+             field->SetSel(0);
+         }
          #else
            #error Missing implementation for function TMyForm::SetFirstListBox() for the chosen framework
          #endif
@@ -753,6 +764,10 @@ class TMyForm {
               if (itemSeek->text() == item->text()) break;
               }
            if (i < field->count()) field->setCurrentRow(i);
+         #elif defined BUILD_WITH_MFC
+             field->SelectString(0, value.c_str());
+             //TODO: search CaseSensitive, default ist insensitive
+             //fw_String searchString = TMy_FW_String::SetText(value); .. loop-find..
          #else
            #error Missing implementation for function TMyForm::SetListBox() for the chosen framework
          #endif
@@ -765,6 +780,12 @@ class TMyForm {
             return AnsiString(strText).c_str();
          #elif defined BUILD_WITH_QT
             return field->currentItem()->text().toStdString();
+         #elif defined BUILD_WITH_MFC
+            fw_String value{};
+            if (int cursel = field->GetCurSel(); cursel > -1 && cursel < field->GetCount()) {
+                field->GetText(cursel, value);
+            }
+            return TMy_FW_String::GetText<std::string>( value );
          #else
            #error Missing implementation for function TMyForm::GetListBox() for the chosen framework
          #endif
@@ -776,6 +797,12 @@ class TMyForm {
             if (field->Items->Count > 0) field->ItemIndex = 0;
          #elif defined BUILD_WITH_QT
             if (field->count() > 0) field->setCurrentIndex(0);
+         #elif defined BUILD_WITH_MFC
+            if (field->GetCount() > 0) {
+                field->SetCurSel(0); 
+                CString strValue; field->GetLBText(0, strValue);
+                field->SetWindowText(strValue);
+                }
          #else
            #error Missing implementation for function TMyForm::SetFirstComboBox() for the chosen framework
          #endif
@@ -784,11 +811,17 @@ class TMyForm {
       template <EMyFrameworkType ft>
       void SetPosition(std::string const& strField, size_t line) {
          if constexpr (ft == EMyFrameworkType::combobox) {
-            auto field = Find<typename MyFrameworkSelect<ft>::type>(strField);
+            fw_Combobox* field = Find<typename MyFrameworkSelect<ft>::type>(strField);
             #if defined BUILD_WITH_VCL || defined BUILD_WITH_FMX
                if (field->Items->Count > 0) field->ItemIndex = line;
             #elif defined BUILD_WITH_QT
                if (field->count() > 0) field->setCurrentIndex(0);
+            #elif defined BUILD_WITH_MFC
+            if (field->GetCount() < line && line>=0ull ) {
+                field->SetCurSel(line);
+                CString strValue; field->GetLBText(0, strValue);
+                field->SetWindowText(strValue);
+            }
             #else
                #error Missing implementation for function TMyForm::SetPosition() for the chosen framework
             #endif
@@ -810,6 +843,9 @@ class TMyForm {
                textCursor.movePosition(QTextCursor::Down, QTextCursor::MoveAnchor, line);
                //textCursor.movePosition(QTextCursor::Right, QTextCursor::MoveAnchor, col);
                field->setTextCursor(textCursor);
+            #elif defined BUILD_WITH_MFC
+               field->SetCaretPos(POINT{ 0l,static_cast<LONG>(line) });
+               field->SetScrollPos(0l, static_cast<LONG>(line) );
             #else
                #error Missing implementation for function TMyForm::SetPosition() for the chosen framework
             #endif
@@ -845,6 +881,8 @@ class TMyForm {
             chosen = std::make_optional(box->IsChecked);
          #elif defined BUILD_WITH_QT
            chosen = std::make_optional(box->checkState() == Qt::Checked); // partially possible, attention
+         #elif defined BUILD_WITH_MFC
+            chosen = std::make_optional(box->GetCheck() == BST_CHECKED );
          #else
             #error Missing implementation for function TMyForm::GetCheckBox() for the chosen framework
          #endif
@@ -897,6 +935,7 @@ class TMyForm {
               list.append(txt); 
               });
            field->addItems(list);
+
          #else
            #error Missing implementation for function TMyForm::InitCombobox() for the chosen framework
          #endif
