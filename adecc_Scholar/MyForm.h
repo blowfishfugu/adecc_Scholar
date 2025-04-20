@@ -540,7 +540,46 @@ class TMyForm {
          else                                                 static_assert_no_match();
          }
 
+      //------------------------------------------------------------------------
+      template<typename ty_base, EMyFrameworkType ft>
+      void GetAsStream(TStreamWrapper<ty_base>& wrapper, std::string const& strName) {
+          if constexpr (ft == EMyFrameworkType::memo || ft == EMyFrameworkType::listbox || ft == EMyFrameworkType::combobox)
+              wrapper.Activate(Find<typename MyFrameworkSelect<ft>::type>(strName));
+          else if constexpr (ft == EMyFrameworkType::statusbar)
+#if defined BUILD_WITH_VCL
+              wrapper.Activate(Find<fw_Statusbar>(strName));
+#elif defined BUILD_WITH_FMX || defined BUILD_WITH_QT
+              wrapper.Activate(Find<fw_Label>(strName));
+#elif defined BUILD_WITH_MFC
+              wrapper.Activate(Find<fw_Statusbar>(strName));
+#endif
+          // Aktivierung einer Liste nicht mehr möglich, da Überschriften benötigt werden
+          // Deshalb neue Funktion
+          else
+              static_assert_no_supported();
+      }
 
+      //GetAsStreamBuff nach unten-> benötigt durchdefinierte MyStream.h
+      //----
+
+      template<typename ty_base, EMyFrameworkType ft>
+      auto* GetAsStreamBuff(std::string const& strName) {
+          if constexpr (ft == EMyFrameworkType::memo)          return new MemoStreamBuf<ty_base>(Find<fw_Memo>(strName));
+          else if constexpr (ft == EMyFrameworkType::listbox)  return new ListBoxStreamBuf<ty_base>(Find<fw_Listbox>(strName));
+          else if constexpr (ft == EMyFrameworkType::combobox) return new ComboBoxStreamBuf<ty_base>(Find<fw_Combobox>(strName));
+          else
+              static_assert_no_supported();
+      }
+
+
+      //------------------------------------------------------------------------
+      template<typename ty_base, EMyFrameworkType ft>
+      void GetAsStream(TStreamWrapper<ty_base>& wrapper, std::string const& strName, std::vector<tplList<ty_base>> const& caps, bool clear = true) {
+          if constexpr (ft == EMyFrameworkType::listview)
+              wrapper.Activate(Find<fw_Table>(strName), caps, clear);
+          else
+              static_assert_no_supported();
+      }
 
       //----------------------------------------------------------------------------------------
       // Listbox fehlt
@@ -1730,46 +1769,7 @@ private:
    std::string strField;
 };
 
-//------------------------------------------------------------------------
-template<typename ty_base, EMyFrameworkType ft>
-void GetAsStream(TStreamWrapper<ty_base>& wrapper, std::string const& strName) {
-    if constexpr (ft == EMyFrameworkType::memo || ft == EMyFrameworkType::listbox || ft == EMyFrameworkType::combobox)
-        wrapper.Activate(Find<typename MyFrameworkSelect<ft>::type>(strName));
-    else if constexpr (ft == EMyFrameworkType::statusbar)
-#if defined BUILD_WITH_VCL
-        wrapper.Activate(Find<fw_Statusbar>(strName));
-#elif defined BUILD_WITH_FMX || defined BUILD_WITH_QT
-        wrapper.Activate(Find<fw_Label>(strName));
-#elif defined BUILD_WITH_MFC
-        wrapper.Activate(Find<fw_Statusbar>(strName));
-#endif
-    // Aktivierung einer Liste nicht mehr möglich, da Überschriften benötigt werden
-    // Deshalb neue Funktion
-    else
-        static_assert_no_supported();
-}
 
-//GetAsStreamBuff nach unten-> benötigt durchdefinierte MyStream.h
-//----
-
-template<typename ty_base, EMyFrameworkType ft>
-auto* GetAsStreamBuff(std::string const& strName) {
-    if constexpr (ft == EMyFrameworkType::memo)          return new MemoStreamBuf<ty_base>(Find<fw_Memo>(strName));
-    else if constexpr (ft == EMyFrameworkType::listbox)  return new ListBoxStreamBuf<ty_base>(Find<fw_Listbox>(strName));
-    else if constexpr (ft == EMyFrameworkType::combobox) return new ComboBoxStreamBuf<ty_base>(Find<fw_Combobox>(strName));
-    else
-        static_assert_no_supported();
-}
-
-
-//------------------------------------------------------------------------
-template<typename ty_base, EMyFrameworkType ft>
-void GetAsStream(TStreamWrapper<ty_base>& wrapper, std::string const& strName, std::vector<tplList<ty_base>> const& caps, bool clear = true) {
-    if constexpr (ft == EMyFrameworkType::listview)
-        wrapper.Activate(Find<fw_Table>(strName), caps, clear);
-    else
-        static_assert_no_supported();
-}
 
 
 #endif
