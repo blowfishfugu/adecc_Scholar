@@ -17,6 +17,7 @@
 #include <sstream>
 #include <iomanip>
 #include <typeinfo>
+#include <functional>
 
 #if defined BUILD_WITH_VCL
 class TMyWait {
@@ -1473,6 +1474,8 @@ class TMyForm {
             return text.Length();
          #elif defined BUILD_WITH_QT
             return text.length();
+         #elif defined BUILD_WITH_MFC
+            return text.GetLength();
          #else
             #error Missing implementation for function TMyForm::get_text_length() for the chosen framework
          #endif
