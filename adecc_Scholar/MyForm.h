@@ -746,10 +746,8 @@ class TMyForm {
            field->clear();
            std::for_each(values.cbegin(), values.cend(), [field](std::string const& value) { field->addItem(QString::fromStdString(value)); });
          #elif defined BUILD_WITH_MFC
-         while (field->GetCount() > 0) { //LBS_HASSTRINGS
-             field->DeleteString(field->GetCount() - 1);
-         }
-         std::for_each(values.cbegin(), values.cend(), [field](std::string const& value) { field->AddString(TMy_FW_String::SetText(value)); });
+             field->ResetContent();
+             std::for_each(values.cbegin(), values.cend(), [field](std::string const& value) { field->AddString(TMy_FW_String::SetText(value)); });
          #else
            #error Missing implementation for function TMyForm::InitListBox() for the chosen framework
          #endif
@@ -974,7 +972,9 @@ class TMyForm {
               list.append(txt); 
               });
            field->addItems(list);
-
+         #elif defined BUILD_WITH_MFC
+             field->ResetContent(); //Falle: Clear loescht nur Selektion in der EditBox
+             std::for_each(values.cbegin(), values.cend(), [field](std::string const& value) { field->AddString(value.c_str()); });
          #else
            #error Missing implementation for function TMyForm::InitCombobox() for the chosen framework
          #endif
@@ -990,6 +990,11 @@ class TMyForm {
          #elif defined BUILD_WITH_QT
          auto clear_items = [this, &field]() { field->clear(); };
             auto set_index = [&field](int iVal) { field->setCurrentIndex(iVal); };
+         #elif defined BUILD_WITH_MFC
+         auto clear_items = [&field]() { field->ResetContent(); };
+         auto set_index = [&field](int iVal) { 
+             if (iVal >= 0 && iVal < field->GetCount()) { field->SetCurSel(iVal); }
+             };
          #else
            #error
          #endif
@@ -1030,6 +1035,18 @@ class TMyForm {
             auto get_index = [&field]() { return field->currentIndex(); };
             auto get_text = [&field]() { return field->currentText(); };
             static constexpr auto convert_text = [](fw_String const& val) -> std::string { return val.toStdString(); };
+         #elif defined BUILD_WITH_MFC
+         auto get_index = [&field]() { return field->GetCurSel(); };
+         auto get_text = [&field]() { 
+             fw_String text;
+             if (field->GetCurSel() == -1) {
+                 field->GetWindowText(text);
+             }
+             else {
+                 field->GetLBText(field->GetCurSel(), text);
+             }
+             return text; };
+         static constexpr auto convert_text = [](fw_String const& val) -> std::string { return TMy_FW_String::GetText<std::string>(val); };
          #else
            #error Missing implementation for function TMyForm::GetComboBox() for the chosen framework
          #endif
@@ -1071,6 +1088,11 @@ class TMyForm {
                   value = strText;
                else if constexpr (std::is_same<std::wstring, used_type>::value || std::is_same<std::wstring&, used_type>::value)
                   value = std::make_optional<std::wstring>(strText.toStdWString());
+               #elif defined BUILD_WITH_MFC
+               else if constexpr (is_mfc_string<used_type>::value)
+                   value = strText;
+               else if constexpr (std::is_same<std::wstring, used_type>::value || std::is_same<std::wstring&, used_type>::value)
+                   value = std::make_optional<std::wstring>(TMy_FW_String::GetText<std::wstring>(strText);
                #endif
                else
                   static_assert(dependent_false<ty>::value, "no valid type for GetCombobox");
@@ -1109,6 +1131,13 @@ class TMyForm {
                value = strText;
             else if constexpr (std::is_same<std::wstring, ty>::value || std::is_same<std::wstring&, ty>::value)
                value = std::make_optional<std::wstring>(strText.toStdWString());
+            #elif BUILD_WITH_MFC
+            //^^ no optional, oben im qt-branch ein make_optional?
+            if constexpr (is_mfc_string<ty>::value) { value = strText; }
+            else if constexpr (std::is_same<std::wstring, ty>::value || std::is_same<std::wstring&, ty>::value)
+            { 
+                value = TMy_FW_String::GetText<std::wstring>(strText);
+            }
             #endif
             else
                static_assert(dependent_false<ty>::value, "no valid type for GetCombobox");
@@ -1130,6 +1159,17 @@ class TMyForm {
             auto del_func1 = [](auto* field, size_t index) { field->removeItem(index); };
             auto del_func2 = [](auto* field, size_t index) { delete field->takeItem(index); };
             auto set_index = [](auto* field, size_t index) { field->setCurrentIndex(index); };
+         #elif defined BUILD_WITH_MFC
+          auto del_func1 = [](fw_Combobox* field, size_t index) {
+                  if (index >= 0ull && index < field->GetCount()) {
+                      field->DeleteString(index);
+                  }
+              };
+          auto del_func2 = [](fw_Listbox* field, size_t index) {
+              if (index >= 0ull && index < field->GetCount()) {
+                  field->DeleteString(index);
+              }
+              };
          #else
             #error Missing implementation for function TMyForm::Delete_Value_in_list() for the chosen framework
          #endif
@@ -1170,6 +1210,14 @@ class TMyForm {
                { 3,                     EMyRetResults::no },
                { QDialog::Rejected,     EMyRetResults::cancel }
               };
+          #elif defined BUILD_WITH_MFC
+           auto call = [](fw_Form* form) { return form->DoModal(); };
+           static const std::map<INT_PTR, EMyRetResults> RetVals = {
+               { IDOK,     EMyRetResults::ok },
+               { IDYES,    EMyRetResults::yes },
+               { IDNO,     EMyRetResults::no },
+               { IDCANCEL, EMyRetResults::cancel }
+              };
          #else
            #error Missing implementation for function TMyForm::ShowModal() for the chosen framework
          #endif
@@ -1199,6 +1247,9 @@ class TMyForm {
          #elif defined BUILD_WITH_QT
             if constexpr (std::is_same<fw_Table, fw>::value) return fld->rowCount();
             else return fld->count();
+         #elif defined BUILD_WITH_MFC
+            if constexpr (std::is_same<fw_Table, fw>::value) return fld->GetItemCount();
+            else return fld->GetCount();
          #else
             #error Missing implementation for function TMyForm::get_row_cnt() for the chosen framework
          #endif
@@ -1220,6 +1271,14 @@ class TMyForm {
          #elif defined BUILD_WITH_QT
             if constexpr (std::is_same<fw_Table, fw>::value) return fld->columnCount(); 
             else return 1u; // prüfen, eventuell mehrere Spalten möglich
+         #elif defined BUILD_WITH_MFC
+            if constexpr (std::is_same<fw_Table, fw>::value) {
+                //gibts nur in LVS_REPORT-Style, colCount haengt am header
+                if (CHeaderCtrl* header = fld->GetHeaderCtrl(); header != nullptr) {
+                    return header->GetItemCount();
+                }
+            }
+            return 1ull;
          #else
             #error Missing implementation for function TMyForm::get_col_cnt() for the chosen framework
          #endif
@@ -1277,6 +1336,38 @@ class TMyForm {
             else if constexpr (std::is_same<fw_Combobox, fw>::value) {
                if(fld->currentIndex >= 0) selected_rows.push_back(static_cast<size_t>(fld->currentIndex));
                }
+            else static_assert_no_match();
+         #elif defined BUILD_WITH_MFC
+            if constexpr (std::is_same<fw_Table, fw>::value) {
+                for (POSITION pos = fld->GetFirstSelectedItemPosition(); pos != nullptr; ) {
+                    int selected_index=fld->GetNextSelectedItem(pos);
+                    selected_rows.emplace_back(static_cast<size_t>(selected_index));
+                }
+               }
+            else if constexpr (std::is_same<fw_Listbox, fw>::value) {
+                //Mehrfachselektion nur bei aktivem LBS_MULTIPLESEL-Style
+                int selCount = fld->GetSelCount();
+                if (selCount == 1) {
+                    selected_rows.emplace_back(static_cast<size_t>(fld->GetCurSel()));
+                }
+                else if (selCount > 0) {
+                    std::vector<INT> indizes{}; //eigener zwischenpuffer, da size_t!=int
+                    indizes.resize(selCount);
+                    fld->GetSelItems(selCount, indizes.data());
+                    selected_rows.reserve(selCount);
+#if _HAS_CXX23
+                    selected_rows.append_range(indizes);
+#else
+                    for (int idx : indizes) { selected_rows.emplace_back(static_cast<size_t>(idx)); }
+#endif
+                    }
+            }
+            else if constexpr (std::is_same<fw_Combobox, fw>::value) {
+                int selIndex = tmp->GetCurSel();
+                if (selIndex >-1) {
+                    selected_rows.emplace_back(static_cast<size_t>(selIndex));
+                }
+            }
             else static_assert_no_match();
          #else
             #error Missing implementation for function TMyForm::get_selected_rows() for the chosen framework
