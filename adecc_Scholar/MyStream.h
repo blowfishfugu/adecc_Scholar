@@ -650,6 +650,8 @@ class TStreamWrapper {
         Reset();
         old = str.rdbuf(new MemoStreamBuf<ty_base>(elem));
         }
+#else
+#error unbekanntes Framework
      #endif
 
      #if defined BUILD_WITH_VCL || defined BUILD_WITH_FMX
@@ -662,6 +664,8 @@ class TStreamWrapper {
         Reset();
         old = str.rdbuf(new LabelStreamBuf<ty_base>(elem));
         }
+#else
+#error unbekanntes Framework
      #endif
 
      #if defined BUILD_WITH_VCL
@@ -681,6 +685,8 @@ class TStreamWrapper {
         Reset();
         old = str.rdbuf(new ListBoxStreamBuf<ty_base>(elem));
         }
+#else
+#error unbekanntes Framework
     #endif
 
     #if defined BUILD_WITH_VCL || defined BUILD_WITH_FMX
@@ -693,7 +699,8 @@ class TStreamWrapper {
         Reset();
         old = str.rdbuf(new ComboBoxStreamBuf<ty_base>(elem));
         }
-     
+#else
+#error unbekanntes Framework
     #endif
 
  #if defined BUILD_WITH_VCL
@@ -711,7 +718,8 @@ class TStreamWrapper {
         Reset();
         old = str.rdbuf(new ListViewStreamBuf<ty_base>(elem, caps, clear));
      }
-
+#else
+#error unbekanntes Framework
 #endif
 
 

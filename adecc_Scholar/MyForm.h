@@ -1275,6 +1275,7 @@ class TMyForm {
          #elif defined BUILD_WITH_MFC
             if constexpr (std::is_same<fw_Table, fw>::value) {
                 //gibts nur in LVS_REPORT-Style, colCount haengt am header
+                //TODO: wird aufgerufen auf jedem set_item_text -> anzahl cachen?
                 if (CHeaderCtrl* header = fld->GetHeaderCtrl(); header != nullptr) {
                     return header->GetItemCount();
                 }
@@ -1417,6 +1418,28 @@ class TMyForm {
          if constexpr (std::is_same<fw_Table, fw>::value) return fld->item(iRow, iCol)->setText(text);
          else if constexpr (std::is_same<fw_Listbox, fw>::value) return fld->item(iRow)->setText(text);
          else return fld->setItemText(iRow, text);
+         #elif defined BUILD_WITH_MFC
+         if constexpr (std::is_same<fw_Table,fw>::value){
+             fld->SetItemText(iRow, iCol, text);
+         }
+         else if constexpr (std::is_same<fw_Listbox,fw>::value){
+             //kein witz, ListBox hat wirklich kein SetItemText
+             //->ueblich, ableiten, ownerdrawn und data selber verwalten ->TODO: Beispiel dazu bauen
+             fld->DeleteString(iRow);
+             fld->InsertString(iRow, text);
+         }
+         else //if constexpr (std::is_same<fw_Combobox,fw>::value){}
+         {
+             COMBOBOXINFO pInfo{};
+             fld->GetComboBoxInfo(&pInfo);
+             if (pInfo.hwndList) {
+                 fw_Listbox box;
+                 box.Attach(pInfo.hwndList);
+                 set_item_text(text, &box, iRow, iCol);
+                 box.Detach();
+             }
+         }
+
          #else
             #error Missing implementation for function TMyForm::get_item_text() for the chosen framework
          #endif
@@ -1464,6 +1487,30 @@ class TMyForm {
             if constexpr (std::is_same<fw_Table, fw>::value) return fld->item(iRow, iCol)->text();
             else if constexpr (std::is_same<fw_Listbox, fw>::value) return fld->item(iRow)->text();
             else return fld->itemText(iRow);
+         #elif defined BUILD_WITH_MFC
+           if constexpr (std::is_same<fw_Table, fw>::value) {
+               return fld->GetItemText(iRow, iCol);
+           }
+           else if constexpr (std::is_same<fw_Listbox, fw>::value) {
+               CString text;
+               fld->GetText(iRow, text);
+               return text;
+           }
+           else //if constexpr (std::is_same<fw_Combobox,fw>::value){}
+           {
+               //CComboBox c; 
+               // Alternativen: c.GetItemData(iRow) <- sofern man selbst verwaltet
+               // Item aktivieren und Text vom CEdit abgreifen: c.SetCurSel + c.GetWindowText
+               COMBOBOXINFO pInfo{};
+               fld->GetComboBoxInfo(&pInfo);
+               if (pInfo.hwndList) {
+                   fw_Listbox box;
+                   box.Attach(pInfo.hwndList);
+                   CString text=get_item_text(&box, iRow, iCol);
+                   box.Detach();
+                   return text;
+               }
+           }
          #else
             #error Missing implementation for function TMyForm::get_item_text() for the chosen framework
          #endif
