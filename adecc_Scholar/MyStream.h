@@ -207,6 +207,37 @@ public:
          }
       }
     };
+#elif defined BUILD_WITH_MFC
+template <typename ty>
+class MemoStreamBuf : public StreamBufBase<ty> {
+private:
+    CEdit* value;
+public:
+    MemoStreamBuf(CEdit* para, bool boClean = true) : StreamBufBase<ty>() {
+        value = para;
+
+        if (boClean)
+            value->Clear();
+    }
+
+    virtual ~MemoStreamBuf(void) { value = nullptr; }
+
+    virtual void Write(void) {
+        if (StreamBufBase<ty>::os.str().length() > 0) {
+            int nLen = value->GetWindowTextLength();
+            value->SetFocus();
+            value->SetSel(nLen, nLen);
+            value->ReplaceSel(StreamBufBase<ty>::os.str().c_str());
+        }
+        else {
+           // value->Lines->Add(L""); //<- empty = newline?
+            int nLen = value->GetWindowTextLength();
+            value->SetFocus();
+            value->SetSel(nLen, nLen);
+            value->ReplaceSel("\r\n");
+        }
+    }
+};
 #else
 #error unbekanntes Framework
 #endif
@@ -260,6 +291,25 @@ class LabelStreamBuf : public StreamBufBase<ty> {
             value->setText(QString::fromStdString(StreamBufBase<ty>::os.str()));
          }
     };
+#elif defined BUILD_WITH_MFC
+template <typename ty>
+class LabelStreamBuf : public StreamBufBase<ty> {
+private:
+    CStatic* value;
+public:
+    LabelStreamBuf(CStatic* para, bool boClean = true) : StreamBufBase<ty>() {
+        value = para;
+        if (boClean) {
+            para->SetWindowText("");
+        }
+    }
+
+    virtual ~LabelStreamBuf(void) { value = nullptr; }
+
+    virtual void Write(void) {
+        value->SetWindowText( StreamBufBase<ty>::os.str().c_str());
+    }
+};
 #else
    #error unbekanntes Framework
 #endif
@@ -282,6 +332,8 @@ class StatusStreamBuf : public StreamBufBase<ty> {
           value->SimpleText = StreamBufBase<ty>::os.str().c_str();
           }
     };
+#else
+#pragma message("Missing StatusStreamBuf")
 #endif
 
 #if defined BUILD_WITH_VCL || defined BUILD_WITH_FMX
@@ -334,6 +386,28 @@ public:
          value->addItem("");
       }
    }
+};
+#elif defined BUILD_WITH_MFC
+template <typename ty>
+class ListBoxStreamBuf : public StreamBufBase<ty> {
+private:
+    CListBox* value;
+public:
+    ListBoxStreamBuf(CListBox* para, bool boMultiSelect = false, bool boClean = true) : StreamBufBase<ty>() {
+        value = para;
+        if (boClean) value->ResetContent();
+    }
+
+    virtual ~ListBoxStreamBuf(void) { value = nullptr; }
+
+    virtual void Write(void) {
+        if (StreamBufBase<ty>::os.str().length() > 0) {
+            value->AddString(StreamBufBase<ty>::os.str().c_str());            
+        }
+        else {
+            value->AddString("");
+        }
+    }
 };
 #else
    #error unbekanntes Framework
@@ -395,6 +469,30 @@ public:
          }
       }
    };
+#elif defined BUILD_WITH_MFC
+template <typename ty>
+class ComboBoxStreamBuf : public StreamBufBase<ty> {
+private:
+    CComboBox* value;
+public:
+    ComboBoxStreamBuf(CComboBox* para, bool boClean = true) : StreamBufBase<ty>() {
+        value = para;
+        if (boClean) {
+            value->ResetContent();
+        }
+    }
+
+    virtual ~ComboBoxStreamBuf(void) { value = nullptr; }
+
+    virtual void Write(void) {
+        if (StreamBufBase<ty>::os.str().length() > 0) {
+            value->AddString(StreamBufBase<ty>::os.str().c_str());
+        }
+        else {
+            value->AddString("");
+        }
+    }
+};
 #else
 #error unbekanntes Framework
 #endif
@@ -599,7 +697,64 @@ public:
       //tw->resizeColumnsToContents();
       }
    };
+#elif defined BUILD_WITH_MFC
+template <typename ty>
+class ListViewStreamBuf : public ListStreamBufBase<ty> {
+private:
+    CListCtrl* value;
+    int item{ -1 };
+    int itemCol{ -1 };
+    bool boNewItem;
+public:
+    ListViewStreamBuf(CListCtrl* para, std::vector<tplList<ty>> const& caps, bool boClean = true) : ListStreamBufBase<ty>(caps) {
+        value = para;
+        item=-1;
+        itemCol = -1;
+        value->SetExtendedStyle(LVS_REPORT);
+        //~LVS_SINGLESEL
+        //~LVS_EX_SINGLEROW
+        //value->RowSelect = true;
+        //value->MultiSelect = true;
+        boNewItem = true;
+        if (boClean) {
+            value->DeleteAllItems();
+            SetColumns();
+        }
+    }
 
+    virtual ~ListViewStreamBuf(void) { value = nullptr; }
+
+    virtual void Write(void) {
+        if (boNewItem) {
+            item=value->InsertItem(value->GetItemCount(), StreamBufBase<ty>::os.str().c_str());
+            itemCol = 0;
+            boNewItem = false;
+        }
+        else {
+            itemCol++;
+            value->SetItemText(item, itemCol, StreamBufBase<ty>::os.str().c_str());
+        }
+    }
+    virtual void NewLine(void) { boNewItem = true; }
+private:
+    void SetColumns(void) {
+        static std::map<EMyAlignmentType, int> Align = {
+                       { EMyAlignmentType::left,    LVCFMT_LEFT },
+                       { EMyAlignmentType::right,   LVCFMT_RIGHT },
+                       { EMyAlignmentType::center,  LVCFMT_CENTER },
+                       { EMyAlignmentType::unknown, LVCFMT_LEFT }
+        };
+        for (auto const& caption : ListStreamBufBase<ty>::captions) {
+            CHeaderCtrl* header = value->GetHeaderCtrl();
+            HDITEM hdItem{};
+            hdItem.mask = HDI_TEXT | HDI_WIDTH | HDI_FORMAT;
+            hdItem.pszText= std::get<0>(caption).c_str();
+            hdItem.cxy = std::get<1>(caption);
+            hdItem.fmt = Align[std::get<2>(caption)];
+            header->InsertItem(header->GetItemCount(), &hdItem);
+        }
+    }
+};
 #else
 #error This component should be implemented for this framework
 #endif
@@ -640,30 +795,40 @@ class TStreamWrapper {
            }
         }
 
-     #if defined BUILD_WITH_VCL || defined BUILD_WITH_FMX
+ #if defined BUILD_WITH_VCL || defined BUILD_WITH_FMX
      void Activate(TMemo* elem) {
         Reset();
         old = str.rdbuf(new MemoStreamBuf<ty_base>(elem));
         }
-     #elif defined BUILD_WITH_QT
+#elif defined BUILD_WITH_QT
      void Activate(QTextEdit* elem) {     
         Reset();
         old = str.rdbuf(new MemoStreamBuf<ty_base>(elem));
         }
+#elif defined BUILD_WITH_MFC
+     void Activate(CEdit* elem) {
+         Reset();
+         old = str.rdbuf(new MemoStreamBuf<ty_base>(elem));
+     }
 #else
 #error unbekanntes Framework
      #endif
 
-     #if defined BUILD_WITH_VCL || defined BUILD_WITH_FMX
+#if defined BUILD_WITH_VCL || defined BUILD_WITH_FMX
      void Activate(TLabel* elem) {
         Reset();
         old = str.rdbuf(new LabelStreamBuf<ty_base>(elem));
         }
-     #elif defined BUILD_WITH_QT
+ #elif defined BUILD_WITH_QT
      void Activate(QLabel* elem) {
         Reset();
         old = str.rdbuf(new LabelStreamBuf<ty_base>(elem));
         }
+#elif defined BUILD_WITH_MFC
+     void Activate(CStatic* elem) {
+         Reset();
+         old = str.rdbuf(new LabelStreamBuf<ty_base>(elem));
+     }
 #else
 #error unbekanntes Framework
      #endif
@@ -685,6 +850,11 @@ class TStreamWrapper {
         Reset();
         old = str.rdbuf(new ListBoxStreamBuf<ty_base>(elem));
         }
+#elif defined BUILD_WITH_MFC
+     void Activate(CListBox* elem) {
+         Reset();
+         old = str.rdbuf(new ListBoxStreamBuf<ty_base>(elem));
+     }
 #else
 #error unbekanntes Framework
     #endif
@@ -699,6 +869,11 @@ class TStreamWrapper {
         Reset();
         old = str.rdbuf(new ComboBoxStreamBuf<ty_base>(elem));
         }
+#elif defined BUILD_WITH_MFC
+     void Activate(CComboBox* elem) {
+         Reset();
+         old = str.rdbuf(new ComboBoxStreamBuf<ty_base>(elem));
+     }
 #else
 #error unbekanntes Framework
     #endif
@@ -717,6 +892,11 @@ class TStreamWrapper {
      void Activate(QTableWidget* elem, std::vector<tplList<ty_base>> const& caps, bool clear = true) {
         Reset();
         old = str.rdbuf(new ListViewStreamBuf<ty_base>(elem, caps, clear));
+     }
+#elif defined BUILD_WITH_MFC
+     void Activate(CListCtrl* elem) {
+         Reset();
+         old = str.rdbuf(new ListViewStreamBuf<ty_base>(elem));
      }
 #else
 #error unbekanntes Framework
