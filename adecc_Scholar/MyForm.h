@@ -123,6 +123,21 @@ class TMyForm {
                                { EMyAlignmentType::center,  ES_CENTER|SS_CENTER},
                                { EMyAlignmentType::unknown, ES_LEFT|SS_LEFT }
      };
+
+     /// <summary>
+     /// Fuer Find, anstatt control-Namen verwendet MFC die ResourceID direkt
+     /// </summary>
+     std::map<fw_String, int> fieldNameToResourceID;
+     void RegisterControl(const fw_String& name, int id) {
+         fieldNameToResourceID[name] = id;
+     }
+
+     std::optional<int> GetID(const fw_String& name) {
+         if (auto f = fieldNameToResourceID.find(name); f != fieldNameToResourceID.end()) {
+             return f->second;
+         }
+         return {};
+     }
       #else
          #error Missing definition of TMyForm::align_type_conv for the chosen framework
       #endif
@@ -130,7 +145,7 @@ class TMyForm {
    public:
       TMyForm(fw_Form* frm = nullptr, bool owner = false) {
          form    = frm;
-       boOwner = owner;
+         boOwner = owner;
        }
 
       TMyForm(TMyForm const&) = delete;
@@ -262,21 +277,21 @@ class TMyForm {
              default:
                 return EMyRetResults::unknown;
              }
-         #elif BUILD_WITH_MFC
+         #elif defined BUILD_WITH_MFC
          UINT mbStyle = MB_OK;
          switch (type) {
              case(EMyMessageType::information): mbStyle = MB_OK | MB_ICONINFORMATION; break;
              case(EMyMessageType::warning): mbStyle = MB_OK | MB_ICONWARNING; break;
              case(EMyMessageType::error):mbStyle = MB_OK | MB_ICONERROR; break;
              case(EMyMessageType::question): mbStyle = MB_YESNOCANCEL | MB_ICONQUESTION; break;
-             case(EMyMessageType::unknown): [[fallthrough]]
+             case(EMyMessageType::unknown):
              default:
                  break;
              }
          //AfxMessageBox() hat nur Text, aber keine Caption, daher win32-MessageBox
          int ret = MessageBox(Form()->GetSafeHwnd(), strMessage, strCaption, mbStyle);
          switch (ret) {
-             case(IDOK): [[fallthrough]]
+             case(IDOK):
              case(IDYES):
                  return EMyRetResults::ok;
              case(IDNO):
@@ -396,13 +411,13 @@ class TMyForm {
          #elif defined BUILD_WITH_QT
            auto set =[this](auto fld, Qt::Alignment align_val) { fld->setAlignment(align_val); };
          #elif defined BUILD_WITH_MFC
-          auto set = [this](auto fld, DWORD align_val) { 
+          auto set = [this](auto fld, DWORD align_val) {
               // gibt Find garantiert was zurueck?
               if (!fld) {
                   return; //TODO: haltepunkt
               }
-              fld->ModifyStyle(ES_LEFT | ES_CENTER | ES_RIGHT, align_val, 0); 
-              }
+              fld->ModifyStyle(ES_LEFT | ES_CENTER | ES_RIGHT, align_val, 0);
+              };
          #else
            #error Missing implementation for function TMyForm::Alignment() for the chosen framework
          #endif
@@ -448,7 +463,7 @@ class TMyForm {
          else if constexpr (ft == EMyFrameworkType::combobox) Find<fw_Combobox>(strField)->setUpdatesEnabled(enabled);
          else if constexpr (ft == EMyFrameworkType::memo) Find<fw_Memo>(strField)->setUpdatesEnabled(enabled);
          else static_assert_no_match(); 
-#elif defined BUILD_WITH_MFC
+         #elif defined BUILD_WITH_MFC
           if (enabled) {
               if constexpr (ft == EMyFrameworkType::listview) Find<fw_Table>(strField)->LockWindowUpdate();
               else if constexpr (ft == EMyFrameworkType::listbox) Find<fw_Listbox>(strField)->LockWindowUpdate();
@@ -463,7 +478,6 @@ class TMyForm {
               else if constexpr (ft == EMyFrameworkType::memo) Find<fw_Memo>(strField)->UnlockWindowUpdate();
               else static_assert_no_match();
           }
-#endif
          #else
           #error Missing implementation for function TMyForm::EnableUpdates() for the chosen framework
          #endif
@@ -595,7 +609,7 @@ class TMyForm {
            #elif defined BUILD_WITH_QT
              auto SetFunc = [this, strField](fw_String const& val) { this->Find<fw_Edit>(strField)->setText(val); };
            #elif defined BUILD_WITH_MFC
-            auto SetFunc = [this, strField](fw_String const& val) { this->Find<fw_Edit>(strField)->SetWindowText(val); }
+            auto SetFunc = [this, strField](fw_String const& val) { this->Find<fw_Edit>(strField)->SetWindowText(val); };
            #endif
            SetFunction(SetFunc, value, iLen, iScale);
              }
@@ -608,7 +622,7 @@ class TMyForm {
            #elif defined BUILD_WITH_QT
              auto SetFunc = [this, strField](fw_String const& val) { this->Find<fw_Memo>(strField)->setText(val); };
            #elif defined BUILD_WITH_MFC
-             auto SetFunc = [this, strField](fw_String const& val) { this->Find<fw_Edit>(strField)->SetWindowText(val); }
+            auto SetFunc = [this, strField](fw_String const& val) { this->Find<fw_Edit>(strField)->SetWindowText(val); };
            #endif
            SetFunction(SetFunc, value, iLen, iScale);
              }
@@ -623,7 +637,7 @@ class TMyForm {
              #elif defined BUILD_WITH_QT
                auto SetFunc = [this, strField](fw_String const& val) { this->Find<fw_Label>(strField)->setText(val); };
              #elif defined BUILD_WITH_MFC
-               auto SetFunc = [this, strField](fw_String const& val) { this->Find<fw_Edit>(strField)->SetWindowText(val); }
+            auto SetFunc = [this, strField](fw_String const& val) { this->Find<fw_Edit>(strField)->SetWindowText(val); };
              #endif
            SetFunction(SetFunc, value, iLen, iScale);
              }
@@ -638,7 +652,7 @@ class TMyForm {
              #elif defined BUILD_WITH_QT
                auto SetFunc = [this, strField](fw_String const& val) { this->Find<fw_Groupbox>(strField)->setTitle(val); };
              #elif defined BUILD_WITH_MFC
-               auto SetFunc = [this, strField](fw_String const& val) { this->Find<fw_Edit>(strField)->SetWindowText(val); }
+            auto SetFunc = [this, strField](fw_String const& val) { this->Find<fw_Edit>(strField)->SetWindowText(val); };
              #endif
            SetFunction(SetFunc, value);
              }
@@ -692,7 +706,7 @@ class TMyForm {
            #elif defined BUILD_WITH_QT
               auto SetFunc = [this, strField](fw_String const& val) { this->Find<fw_Button>(strField)->setText(val); };
            #elif defined BUILD_WITH_MFC
-              auto SetFunc = [this, strField](fw_String const& val) { this->Find<fw_Edit>(strField)->SetWindowText(val); }
+            auto SetFunc = [this, strField](fw_String const& val) { this->Find<fw_Edit>(strField)->SetWindowText(val); };
            #endif
            SetFunction(SetFunc, value);
              }
@@ -1093,7 +1107,7 @@ class TMyForm {
                else if constexpr (is_mfc_string<used_type>::value)
                    value = strText;
                else if constexpr (std::is_same<std::wstring, used_type>::value || std::is_same<std::wstring&, used_type>::value)
-                   value = std::make_optional<std::wstring>(TMy_FW_String::GetText<std::wstring>(strText);
+                   value = std::make_optional<std::wstring>(TMy_FW_String::GetText<std::wstring>(strText));
                #endif
                else
                   static_assert(dependent_false<ty>::value, "no valid type for GetCombobox");
@@ -1365,7 +1379,7 @@ class TMyForm {
                     }
             }
             else if constexpr (std::is_same<fw_Combobox, fw>::value) {
-                int selIndex = tmp->GetCurSel();
+                int selIndex = fld->GetCurSel();
                 if (selIndex >-1) {
                     selected_rows.emplace_back(static_cast<size_t>(selIndex));
                 }
@@ -1649,6 +1663,12 @@ class TMyForm {
            auto *comp = Form()->FindComponent(strField.c_str());
          #elif defined BUILD_WITH_QT
            auto* comp = Form()->findChild<QObject* >(QString::fromStdString(strField));
+         #elif defined BUILD_WITH_MFC
+          std::optional<int> ctrlID = GetID(TMy_FW_String::SetText(strField));
+          CWnd* comp = nullptr;
+          if (ctrlID) {
+              comp=Form()->GetDlgItem(*ctrlID);
+          }
          #else
            #error Missing implementation for function TMyForm::Find() for the chosen framework
          #endif
@@ -1658,6 +1678,7 @@ class TMyForm {
                << FormName() << "\".";
             throw std::runtime_error(os.str().c_str());
             }
+
          ty* field = dynamic_cast<ty*>(comp);
          if(!field) {
             std::ostringstream os;
@@ -1675,6 +1696,12 @@ class TMyForm {
             auto* comp = Form()->FindComponent(strField.c_str());
          #elif defined BUILD_WITH_QT
             auto* comp = Form()->findChild<QObject* >(QString::fromStdString(strField));
+         #elif defined BUILD_WITH_MFC
+          std::optional<int> ctrlID = GetID(TMy_FW_String::SetText(strField));
+          CWnd* comp = nullptr;
+          if (ctrlID) {
+              comp = Form()->GetDlgItem(*ctrlID);
+          }
          #else
             #error Missing implementation for function TMyForm::Check() for the chosen framework
          #endif
@@ -1718,6 +1745,22 @@ class TMyForm {
            auto set_to = [&field](fw_String const& strSeek) { 
               field->setCurrentText(strSeek);
               };
+        #elif defined BUILD_WITH_MFC
+          auto get_index = [this, &field]() { return field->GetCurSel();  };
+          auto set_index = [this, &field](int val) { return field->SetCurSel(val); };
+          auto set_to = [this, &field](fw_String const& strSeek) {
+              field->SetCurSel(-1);
+              field->SetWindowText("");
+              int itemIndex=field->FindStringExact(0, strSeek.GetString());
+              if (itemIndex == -1) {
+                  std::stringstream os;
+                  os << "Element \"" << strSeek.GetString() << "\" not found!";
+                  throw std::runtime_error(os.str().c_str());
+              }
+              else {
+                  field->SetCurSel(itemIndex);
+              }
+              };
          #else
            #error Missing implementation for function TMyForm::SetCombobox() for the chosen framework
          #endif
@@ -1741,7 +1784,7 @@ class TMyForm {
                else if constexpr (is_cpp_wide_string<used_type>::value)     set_to(QString::fromStdWString(*value));
                else if constexpr (is_wchar_or_char_param<used_type>::value) set_to(QString(*value));
                #endif
-               else if constexpr (is_number_param<used_type>::value) {
+               if constexpr (is_number_param<used_type>::value) {
                   int iVal = static_cast<int>(*value);
                   auto it = std::find_if(rep.begin(), rep.end(), [iVal](auto const& val) {
                      return iVal == val.second;
@@ -1777,7 +1820,7 @@ class TMyForm {
             else if constexpr (is_cpp_wide_string<ty>::value)     set_to(QString::fromStdWString(value));
             else if constexpr (is_wchar_or_char_param<ty>::value) set_to(QString(value));
             #endif
-            else if constexpr (is_number_param<ty>::value) {
+            if constexpr (is_number_param<ty>::value) {
                int iVal = static_cast<int>(value);
                auto it = std::find_if(rep.begin(), rep.end(), [iVal](auto const& val) {
                   return iVal == val.second;
