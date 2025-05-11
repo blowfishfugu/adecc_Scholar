@@ -1819,6 +1819,8 @@ class TMyForm {
                }
             else if constexpr (is_cpp_wide_string<ty>::value)     set_to(QString::fromStdWString(value));
             else if constexpr (is_wchar_or_char_param<ty>::value) set_to(QString(value));
+            #else
+                #error Missing implementation for function TMyForm::SetCombobox() for the chosen framework
             #endif
             if constexpr (is_number_param<ty>::value) {
                int iVal = static_cast<int>(value);
@@ -1830,6 +1832,8 @@ class TMyForm {
                   set_to(it->first.c_str());
                   #elif defined BUILD_WITH_QT
                   set_to(QString::fromStdString(it->first()));
+                  #else
+                  #error Missing implementation for function TMyForm::SetCombobox() for the chosen framework                  
                   #endif
                   }
                else {
