@@ -1507,10 +1507,10 @@ class TMyForm {
            }
            else if constexpr (std::is_same<fw_Listbox, fw>::value) {
                CString text;
-               fld->GetText(iRow, text);
+               fld->GetText(static_cast<int>(iRow), text);
                return text;
            }
-           else //if constexpr (std::is_same<fw_Combobox,fw>::value){}
+           else if constexpr (std::is_same<fw_Combobox,fw>::value)
            {
                //CComboBox c; 
                // Alternativen: c.GetItemData(iRow) <- sofern man selbst verwaltet
@@ -1520,7 +1520,8 @@ class TMyForm {
                if (pInfo.hwndList) {
                    fw_Listbox box;
                    box.Attach(pInfo.hwndList);
-                   CString text=get_item_text(&box, iRow, iCol);
+                   CString text; // = get_item_text(&box, iRow, iCol);
+                   box.GetText(iRow, text);
                    box.Detach();
                    return text;
                }
@@ -1783,6 +1784,11 @@ class TMyForm {
                   }
                else if constexpr (is_cpp_wide_string<used_type>::value)     set_to(QString::fromStdWString(*value));
                else if constexpr (is_wchar_or_char_param<used_type>::value) set_to(QString(*value));
+               #elif defined BUILD_WITH_MFC
+               if constexpr (is_mfc_string<used_type>::value) { set_to(*value); }
+               else if constexpr(is_cpp_string<used_type>::value) {
+                   set_to( TMy_FW_String::SetText(*value.c_str()));
+               }
                #else
                #error Missing implementation for function set_to() for the chosen framework
                #endif
@@ -1796,6 +1802,8 @@ class TMyForm {
                      set_to(it->first.c_str());
                      #elif defined BUILD_WITH_QT
                      set_to(QString::fromStdString(it->first));
+                     #elif defined BUILD_WITH_MFC
+                      set_to(TMy_FW_String::SetText(it->first.c_str()));
                      #else
                      #error Missing implementation for function-call set_to() for the chosen framework
                      #endif
@@ -1823,23 +1831,31 @@ class TMyForm {
                }
             else if constexpr (is_cpp_wide_string<ty>::value)     set_to(QString::fromStdWString(value));
             else if constexpr (is_wchar_or_char_param<ty>::value) set_to(QString(value));
+            #elif defined BUILD_WITH_MFC
+             if constexpr (is_mfc_string<ty>::value) { set_to(*value); }
+             else if constexpr (is_cpp_string<ty>::value) {
+                 set_to(TMy_FW_String::SetText(value.c_str()));
+             }
             #else
                 #error Missing implementation for function-call set_to for the chosen framework
             #endif
-            if constexpr (is_number_param<ty>::value) {
+            else if constexpr (is_number_param<ty>::value) {
                int iVal = static_cast<int>(value);
                auto it = std::find_if(rep.begin(), rep.end(), [iVal](auto const& val) {
                   return iVal == val.second;
                   });
-               if (it != rep.end()) {
+               if (it != rep.end()) 
+               {
                   #if defined BUILD_WITH_VCL || defined BUILD_WITH_FMX
                   set_to(it->first.c_str());
                   #elif defined BUILD_WITH_QT
                   set_to(QString::fromStdString(it->first()));
+                  #elif defined BUILD_WITH_MFC
+                  set_to(TMy_FW_String::SetText(it->first.c_str()));
                   #else
                   #error Missing implementation for function-call set_to() for the chosen framework                  
                   #endif
-                  }
+               }
                else {
                   std::stringstream os;
                   os << "Element with ID = " << iVal << " not found!";
