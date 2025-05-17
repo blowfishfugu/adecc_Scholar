@@ -332,6 +332,23 @@ class StatusStreamBuf : public StreamBufBase<ty> {
           value->SimpleText = StreamBufBase<ty>::os.str().c_str();
           }
     };
+#elif defined BUILD_WITH_MFC
+template <typename ty>
+class StatusStreamBuf : public StreamBufBase<ty> {
+private:
+    CStatusBar* value;
+public:
+    StatusStreamBuf(CStatusBar* para, bool boClean = true) : StreamBufBase<ty>() {
+        value = para;
+        if (boClean) value->SetPaneText(0, _T(""));
+    }
+
+    virtual ~StatusStreamBuf(void) { value = nullptr; }
+
+    virtual void Write(void) {
+        value->SetPaneText( 0, StreamBufBase<ty>::os.str().c_str() );
+    }
+};
 #else
 #pragma message("Missing StatusStreamBuf")
 #endif
@@ -748,7 +765,7 @@ private:
             CHeaderCtrl* header = value->GetHeaderCtrl();
             HDITEM hdItem{};
             hdItem.mask = HDI_TEXT | HDI_WIDTH | HDI_FORMAT;
-            hdItem.pszText= std::get<0>(caption).c_str();
+            hdItem.pszText= const_cast<LPSTR>(std::get<0>(caption).c_str());
             hdItem.cxy = std::get<1>(caption);
             hdItem.fmt = Align[std::get<2>(caption)];
             header->InsertItem(header->GetItemCount(), &hdItem);
@@ -838,6 +855,11 @@ class TStreamWrapper {
         Reset();
         old = str.rdbuf(new StatusStreamBuf<ty_base>(elem));
         }
+    #elif defined BUILD_WITH_MFC
+     void Activate(CStatusBar* elem) {
+         Reset();
+         old = str.rdbuf(new StatusStreamBuf<ty_base>(elem));
+     }
     #endif
    
     #if defined BUILD_WITH_VCL || defined BUILD_WITH_FMX
@@ -894,9 +916,9 @@ class TStreamWrapper {
         old = str.rdbuf(new ListViewStreamBuf<ty_base>(elem, caps, clear));
      }
 #elif defined BUILD_WITH_MFC
-     void Activate(CListCtrl* elem) {
+     void Activate(CListCtrl* elem, std::vector<tplList<ty_base>> const& caps, bool clear = true) {
          Reset();
-         old = str.rdbuf(new ListViewStreamBuf<ty_base>(elem));
+         old = str.rdbuf(new ListViewStreamBuf<ty_base>(elem, caps, clear));
      }
 #else
 #error unbekanntes Framework

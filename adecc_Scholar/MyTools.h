@@ -282,7 +282,7 @@ class TMyTools {
       */
       template <typename ty>
       static std::string integral_to_string(ty const& value) {
-	     std::array<char, 25> tgt;
+         std::array<char, 25> tgt{};
          if constexpr (std::is_integral<ty>::value && !std::is_same<ty, bool>::value) {
 	        auto [ptr, ec] = std::to_chars(tgt.data(), tgt.data() + tgt.size(), value);
             check_or_exception(ec);

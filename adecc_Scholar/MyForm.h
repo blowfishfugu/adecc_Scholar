@@ -1503,7 +1503,7 @@ class TMyForm {
             else return fld->itemText(iRow);
          #elif defined BUILD_WITH_MFC
            if constexpr (std::is_same<fw_Table, fw>::value) {
-               return fld->GetItemText(iRow, iCol);
+               return fld->GetItemText(static_cast<int>(iRow), static_cast<int>(iCol));
            }
            else if constexpr (std::is_same<fw_Listbox, fw>::value) {
                CString text;
@@ -1665,6 +1665,11 @@ class TMyForm {
          #elif defined BUILD_WITH_QT
            auto* comp = Form()->findChild<QObject* >(QString::fromStdString(strField));
          #elif defined BUILD_WITH_MFC
+          //map name->CWnd*? 
+          // Der Haken: SetWindowText wird ins leere greifen solange OnInit nicht durch ist
+          // Jedes Kindcontrol erhält Createwindow.. aber erst während DoModal()
+          
+          //per ID wird nur ein Kindfenster vorfinden, wenn OnInitDialog bereits geschehen ist
           std::optional<int> ctrlID = GetID(TMy_FW_String::SetText(strField));
           CWnd* comp = nullptr;
           if (ctrlID) {
